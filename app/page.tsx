@@ -68,7 +68,7 @@ export default function Home() {
         <div
           className={`${pulse.className} relative z-10 -translate-y-[8vh] flex max-w-3xl flex-col items-center text-center`}
         >
-          <h1 className="text-7xl font-semibold leading-none tracking-[-0.045em] sm:text-[9rem]">
+          <h1 className="origin-center text-7xl font-semibold leading-none tracking-[-0.045em] transition-transform duration-300 ease-out hover:scale-110 sm:text-[9rem]">
             Pulse
           </h1>
           <p className="mt-8 max-w-md text-lg font-normal leading-7 text-neutral-300 sm:text-xl">
