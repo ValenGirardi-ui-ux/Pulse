@@ -2,117 +2,68 @@
 
 import { useEffect } from "react";
 
-const DURATION_MS = 900;
-
-function easeInOut(progress: number) {
-  return progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2;
-}
+const EASE = 0.07;
+const WHEEL_SPEED = 0.55;
+const LINE_HEIGHT = 16;
 
 export function SmoothScroll() {
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const root = document.documentElement;
+    let target = window.scrollY;
+    let current = window.scrollY;
     let frame = 0;
-    let busy = false;
-    let coolUntil = 0;
+    let running = false;
 
-    function screens() {
-      return [...document.querySelectorAll<HTMLElement>("[data-screen]")];
+    function maxScroll() {
+      return Math.max(0, root.scrollHeight - window.innerHeight);
     }
 
-    function currentIndex(list: HTMLElement[]) {
-      const y = window.scrollY;
-      let index = 0;
-      let best = Number.POSITIVE_INFINITY;
+    function step() {
+      current += (target - current) * EASE;
 
-      list.forEach((screen, i) => {
-        const distance = Math.abs(screen.offsetTop - y);
-        if (distance < best) {
-          best = distance;
-          index = i;
-        }
-      });
-
-      return index;
-    }
-
-    function glideTo(top: number, duration = DURATION_MS) {
-      cancelAnimationFrame(frame);
-      const start = window.scrollY;
-      const change = top - start;
-
-      if (Math.abs(change) < 2) {
-        busy = false;
-        return;
+      if (Math.abs(target - current) < 0.5) {
+        current = target;
+        running = false;
       }
 
-      if (media.matches) {
-        window.scrollTo(0, top);
-        busy = false;
-        coolUntil = performance.now() + 350;
-        return;
-      }
-
-      const started = performance.now();
-
-      function step(now: number) {
-        const progress = Math.min(1, (now - started) / duration);
-        window.scrollTo(0, start + change * easeInOut(progress));
-
-        if (progress < 1) {
-          frame = requestAnimationFrame(step);
-          return;
-        }
-
-        busy = false;
-        coolUntil = performance.now() + 450;
-      }
-
-      frame = requestAnimationFrame(step);
+      window.scrollTo(0, current);
+      if (running) frame = requestAnimationFrame(step);
     }
 
     function onWheel(event: WheelEvent) {
-      const list = screens();
-      if (list.length < 2) return;
+      if (event.ctrlKey || root.style.overflow === "hidden") return;
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
-      if (busy || performance.now() < coolUntil) {
-        event.preventDefault();
-        return;
+      event.preventDefault();
+
+      if (!running) {
+        target = window.scrollY;
+        current = window.scrollY;
       }
 
-      if (Math.abs(event.deltaY) < 4) return;
+      const delta = event.deltaMode === 1 ? event.deltaY * LINE_HEIGHT : event.deltaY;
+      target = Math.min(maxScroll(), Math.max(0, target + delta * WHEEL_SPEED));
 
-      const index = currentIndex(list);
-      const next = event.deltaY > 0 ? index + 1 : index - 1;
-      if (next < 0 || next >= list.length) return;
-
-      event.preventDefault();
-      busy = true;
-      glideTo(list[next].offsetTop);
+      if (!running) {
+        running = true;
+        frame = requestAnimationFrame(step);
+      }
     }
 
-    function onClick(event: MouseEvent) {
-      const link = (event.target as Element | null)?.closest("a");
-      if (!link) return;
-
-      const href = link.getAttribute("href");
-      if (!href?.startsWith("#")) return;
-
-      const target = document.querySelector<HTMLElement>(href);
-      if (!target) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      history.pushState(null, "", href);
-      busy = true;
-      glideTo(target.offsetTop);
+    function onScroll() {
+      if (running) return;
+      target = window.scrollY;
+      current = window.scrollY;
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
-    document.addEventListener("click", onClick, true);
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       window.removeEventListener("wheel", onWheel);
-      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(frame);
     };
   }, []);
