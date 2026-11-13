@@ -56,9 +56,9 @@ const footerColumns = [
   {
     title: "Legal",
     links: [
-      { href: "#", label: "Terms of use" },
-      { href: "#", label: "Privacy" },
-      { href: "#", label: "Security" },
+      { href: "/terms", label: "Terms of use" },
+      { href: "/privacy", label: "Privacy" },
+      { href: "/security", label: "Security" },
     ],
   },
 ];
