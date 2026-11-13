@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "../i18n";
 
 export function Toggle({ label, defaultOn = false }: { label: string; defaultOn?: boolean }) {
   const [on, setOn] = useState(defaultOn);
+  const t = useT();
 
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
-      aria-label={label}
+      aria-label={t(label)}
       onClick={() => setOn(!on)}
       className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
         on ? "bg-[#4c2882]" : "bg-[#dfe2ea]"
@@ -40,9 +42,10 @@ export function Segmented<T extends string>({
 }) {
   const [internal, setInternal] = useState<T>(defaultValue ?? options[0]);
   const value = controlled ?? internal;
+  const t = useT();
 
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg bg-[#f4f5f8] p-0.5">
+    <div role="radiogroup" aria-label={t(label)} className="inline-flex rounded-lg bg-[#f4f5f8] p-0.5">
       {options.map((option) => {
         const active = option === value;
         return (
@@ -61,7 +64,7 @@ export function Segmented<T extends string>({
                 : "text-[#5b6478] hover:text-[#0f1a2e]"
             }`}
           >
-            {option}
+            {t(option)}
           </button>
         );
       })}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { issues, severityDot, type Category, type Severity } from "../data";
+import { useAgent } from "../agent";
+import { useT } from "../../i18n";
 import { IconChevron, IconSpark } from "../icons";
 
 const filters: ("All" | Category)[] = ["All", "Development", "SEO", "Marketing", "Performance"];
@@ -14,6 +16,8 @@ const groups: { severity: Severity; label: string }[] = [
 export function IssuesList() {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [openId, setOpenId] = useState<string | null>(issues[0].id);
+  const { ask } = useAgent();
+  const t = useT();
 
   const visible = issues.filter((issue) => filter === "All" || issue.category === filter);
 
@@ -35,7 +39,7 @@ export function IssuesList() {
                   : "border-[#ececf1] text-[#5b6478] hover:border-[#d9dce6] hover:text-[#0f1a2e]"
               }`}
             >
-              {name}
+              {name === "All" ? t("All", "Todos") : t(name)}
               <span className={`font-mono text-[10px] ${active ? "text-white/60" : "text-[#9aa1b2]"}`}>{count}</span>
             </button>
           );
@@ -50,11 +54,11 @@ export function IssuesList() {
           <section key={severity}>
             <h2 className="mb-2.5 flex items-center gap-2 text-xs font-medium text-[#5b6478]">
               <span className={`size-1.5 rounded-full ${severityDot[severity]}`} />
-              {label}
+              {t(label)}
               <span className="font-mono text-[11px] text-[#9aa1b2]">{items.length}</span>
             </h2>
 
-            <ul className="overflow-hidden rounded-xl border border-[#ececf1]">
+            <ul className="overflow-hidden rounded-2xl border border-black/[0.07] bg-white shadow-[0_8px_24px_rgba(15,26,46,0.08)]">
               {items.map((issue) => {
                 const open = openId === issue.id;
                 return (
@@ -66,15 +70,15 @@ export function IssuesList() {
                       className="group flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-[#fafafb]"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium">{issue.title}</span>
-                        <span className="mt-0.5 block truncate text-xs text-[#8a91a3]">{issue.impact}</span>
+                        <span className="block truncate text-[13px] font-medium">{t(issue.title)}</span>
+                        <span className="mt-0.5 block truncate text-xs text-[#8a91a3]">{t(issue.impact)}</span>
                       </span>
-                      <span className="hidden w-24 shrink-0 text-xs text-[#5b6478] md:block">{issue.category}</span>
+                      <span className="hidden w-24 shrink-0 text-xs text-[#5b6478] md:block">{t(issue.category)}</span>
                       <span className="hidden w-20 shrink-0 truncate font-mono text-[11px] text-[#8a91a3] sm:block">
-                        {issue.page}
+                        {t(issue.page)}
                       </span>
                       <span className="hidden w-14 shrink-0 text-right font-mono text-[11px] text-[#9aa1b2] sm:block">
-                        {issue.found}
+                        {t(issue.found)}
                       </span>
                       <IconChevron
                         className={`size-3.5 shrink-0 text-[#c9cedd] transition-transform duration-200 group-hover:text-[#5b6478] ${
@@ -92,28 +96,36 @@ export function IssuesList() {
                       <div className="overflow-hidden">
                         <div className="px-4 pb-4">
                           <div className="rounded-lg bg-[#fafafb] p-4">
-                            <p className="text-xs font-medium text-[#5b6478]">How to fix</p>
+                            <p className="text-xs font-medium text-[#5b6478]">{t("How to fix", "Cómo arreglarlo")}</p>
                             <ol className="mt-2.5 space-y-2">
                               {issue.fix.map((step, index) => (
                                 <li key={step} className="flex gap-3 text-[13px] leading-5 text-[#3c4558]">
                                   <span className="mt-px font-mono text-[11px] text-[#9aa1b2]">{index + 1}</span>
-                                  {step}
+                                  {t(step)}
                                 </li>
                               ))}
                             </ol>
                             <div className="mt-4 flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
-                                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#4c2882] px-3 text-xs font-medium text-white transition-colors hover:bg-[#5a3196]"
+                                onClick={() =>
+                                  ask(
+                                    t(
+                                      `Help me fix "${issue.title}" (${issue.page}). ${issue.impact}`,
+                                      `Ayudame a arreglar "${t(issue.title)}" (${t(issue.page)}). ${t(issue.impact)}`,
+                                    ),
+                                  )
+                                }
+                                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#4c2882] px-3 text-xs font-medium text-white transition-colors hover:bg-[#5a3196]"
                               >
                                 <IconSpark className="size-3" />
-                                Ask Pulse for help
+                                {t("Ask Pulse for help", "Pedirle ayuda a Pulse")}
                               </button>
                               <button
                                 type="button"
-                                className="inline-flex h-8 items-center rounded-lg border border-[#e3e6ef] bg-white px-3 text-xs font-medium transition-colors hover:border-[#c9cedd]"
+                                className="inline-flex h-8 items-center rounded-full border border-black/[0.08] bg-white px-3 text-xs font-medium transition-colors hover:border-[#c9cedd]"
                               >
-                                Mark as fixed
+                                {t("Mark as fixed", "Marcar como resuelto")}
                               </button>
                             </div>
                           </div>

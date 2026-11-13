@@ -91,15 +91,6 @@ export function Dashboard() {
   }
 
   const visible = sites.filter((site) => site.url.includes(query.trim().toLowerCase()));
-  const scanned = sites.filter((site) => site.status !== "Scanning");
-  const average = scanned.length
-    ? Math.round(scanned.reduce((sum, site) => sum + site.score, 0) / scanned.length)
-    : 0;
-  const counts = {
-    Healthy: scanned.filter((s) => s.status === "Healthy").length,
-    Warning: scanned.filter((s) => s.status === "Warning").length,
-    Critical: scanned.filter((s) => s.status === "Critical").length,
-  };
 
   const tabClass = (active: boolean) =>
     `rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors duration-200 ${
@@ -222,50 +213,7 @@ export function Dashboard() {
           </ul>
         </>
       ) : (
-        <div className="px-5 py-5">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#9aa1b2]">Average Pulse Score</p>
-              <p className="mt-1 text-4xl font-semibold tracking-tight text-[#0f1a2e]">{average}</p>
-            </div>
-            <div className="flex gap-2">
-              {(Object.keys(counts) as (keyof typeof counts)[]).map((status) => (
-                <span
-                  key={status}
-                  className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] ${statusStyles[status].chip}`}
-                >
-                  {counts[status]} {status}
-                </span>
-              ))}
-            </div>
-          </div>
-          <ul className="mt-5 space-y-3">
-            {scanned.map((site) => (
-              <li key={site.url}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTab("sites");
-                    setQuery("");
-                    setOpenUrl(site.url);
-                  }}
-                  className="group w-full text-left"
-                >
-                  <div className="flex justify-between font-mono text-[11px] text-[#0f1a2e]">
-                    <span className="transition-colors group-hover:text-[#4c2882]">{site.url}</span>
-                    <span>{site.score}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-[#eef0f5]">
-                    <div
-                      className={`h-full rounded-full ${statusStyles[site.status].bar}`}
-                      style={{ width: `${site.score}%` }}
-                    />
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <div className="min-h-[17rem] bg-[#e8eaef]" aria-hidden="true" />
       )}
     </div>
   );

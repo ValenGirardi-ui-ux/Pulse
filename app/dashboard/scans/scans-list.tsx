@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { scans, type Change } from "../data";
+import { useT } from "../../i18n";
 import { IconChevron } from "../icons";
 
 const changeStyle: Record<Change["kind"], { label: string; className: string }> = {
@@ -10,12 +11,18 @@ const changeStyle: Record<Change["kind"], { label: string; className: string }> 
   improved: { label: "Improved", className: "text-[#4c2882]" },
 };
 
-function summary(changes: Change[]) {
-  if (changes.length === 0) return "No changes";
+const kindEs: Record<Change["kind"], [string, string]> = {
+  new: ["nuevo", "nuevos"],
+  fixed: ["resuelto", "resueltos"],
+  improved: ["mejora", "mejoras"],
+};
+
+function summary(changes: Change[], t: ReturnType<typeof useT>) {
+  if (changes.length === 0) return t("No changes", "Sin cambios");
   const counts = (["new", "fixed", "improved"] as const)
     .map((kind) => ({ kind, n: changes.filter((c) => c.kind === kind).length }))
     .filter(({ n }) => n > 0);
-  return counts.map(({ kind, n }) => `${n} ${kind}`).join(" · ");
+  return counts.map(({ kind, n }) => `${n} ${t(kind, kindEs[kind][n === 1 ? 0 : 1])}`).join(" · ");
 }
 
 function scoreTone(score: number) {
@@ -27,13 +34,14 @@ function scoreTone(score: number) {
 export function ScansList() {
   const [openId, setOpenId] = useState<string | null>(scans[0].id);
   const days = [...new Set(scans.map((scan) => scan.day))];
+  const t = useT();
 
   return (
     <div className="space-y-8">
       {days.map((day) => (
         <section key={day}>
-          <h2 className="mb-2.5 text-xs font-medium text-[#5b6478]">{day}</h2>
-          <ul className="overflow-hidden rounded-xl border border-[#ececf1]">
+          <h2 className="mb-2.5 text-xs font-medium text-[#5b6478]">{t(day)}</h2>
+          <ul className="overflow-hidden rounded-2xl border border-black/[0.07] bg-white shadow-[0_8px_24px_rgba(15,26,46,0.08)]">
             {scans
               .filter((scan) => scan.day === day)
               .map((scan) => {
@@ -53,12 +61,12 @@ export function ScansList() {
                             scan.trigger === "Manual" ? "bg-[#4c2882]/[0.07] text-[#4c2882]" : "bg-[#f4f5f8] text-[#5b6478]"
                           }`}
                         >
-                          {scan.trigger}
+                          {t(scan.trigger)}
                         </span>
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-[#5b6478]">{summary(scan.changes)}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-[#5b6478]">{summary(scan.changes, t)}</span>
                       <span className="hidden w-16 shrink-0 font-mono text-[11px] text-[#8a91a3] sm:block">
-                        {scan.pages} pages
+                        {scan.pages} {t("pages", "páginas")}
                       </span>
                       <span className="flex w-16 shrink-0 items-center justify-end gap-2">
                         <span className={`size-1.5 rounded-full ${scoreTone(scan.score)}`} />
@@ -92,17 +100,19 @@ export function ScansList() {
                         <div className="px-4 pb-4">
                           <div className="flex flex-col gap-4 rounded-lg bg-[#fafafb] p-4 sm:flex-row sm:items-start">
                             <div className="flex-1">
-                              <p className="text-xs font-medium text-[#5b6478]">What changed</p>
+                              <p className="text-xs font-medium text-[#5b6478]">{t("What changed", "Qué cambió")}</p>
                               {scan.changes.length === 0 ? (
-                                <p className="mt-2.5 text-[13px] text-[#8a91a3]">Everything looked the same as the previous scan.</p>
+                                <p className="mt-2.5 text-[13px] text-[#8a91a3]">
+                                  {t("Everything looked the same as the previous scan.", "Todo estaba igual que en el escaneo anterior.")}
+                                </p>
                               ) : (
                                 <ul className="mt-2.5 space-y-2">
                                   {scan.changes.map((change) => (
                                     <li key={change.text} className="flex gap-3 text-[13px]">
                                       <span className={`w-16 shrink-0 text-xs font-medium ${changeStyle[change.kind].className}`}>
-                                        {changeStyle[change.kind].label}
+                                        {t(changeStyle[change.kind].label)}
                                       </span>
-                                      <span className="text-[#3c4558]">{change.text}</span>
+                                      <span className="text-[#3c4558]">{t(change.text)}</span>
                                     </li>
                                   ))}
                                 </ul>
@@ -110,15 +120,15 @@ export function ScansList() {
                             </div>
                             <dl className="grid shrink-0 grid-cols-3 gap-6 sm:grid-cols-1 sm:gap-2 sm:text-right">
                               <div>
-                                <dt className="text-[11px] text-[#9aa1b2]">Ran</dt>
-                                <dd className="font-mono text-xs">{scan.ago}</dd>
+                                <dt className="text-[11px] text-[#9aa1b2]">{t("Ran", "Hecho")}</dt>
+                                <dd className="font-mono text-xs">{t(scan.ago)}</dd>
                               </div>
                               <div>
-                                <dt className="text-[11px] text-[#9aa1b2]">Duration</dt>
+                                <dt className="text-[11px] text-[#9aa1b2]">{t("Duration", "Duración")}</dt>
                                 <dd className="font-mono text-xs">{scan.duration}</dd>
                               </div>
                               <div>
-                                <dt className="text-[11px] text-[#9aa1b2]">Pages</dt>
+                                <dt className="text-[11px] text-[#9aa1b2]">{t("Pages", "Páginas")}</dt>
                                 <dd className="font-mono text-xs">{scan.pages}</dd>
                               </div>
                             </dl>
