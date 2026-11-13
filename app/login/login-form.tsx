@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { login, type AuthState } from "../auth/actions";
@@ -38,9 +39,9 @@ export function LoginForm() {
         <label className="text-sm font-semibold" htmlFor="login-password">
           {t("Password", "Contraseña")}
         </label>
-        <button type="button" className="text-sm text-blue-600">
+        <Link href="/forgot-password" className="text-sm text-blue-600">
           {t("Forgot password?", "¿Olvidaste tu contraseña?")}
-        </button>
+        </Link>
       </div>
       <input
         id="login-password"

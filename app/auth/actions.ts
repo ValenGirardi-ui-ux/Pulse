@@ -15,6 +15,9 @@ export type AuthErrorCode =
   | "invalid_website"
   | "rate_limited"
   | "not_configured"
+  | "password_mismatch"
+  | "same_password"
+  | "reset_expired"
   | "unknown";
 
 export type AuthState =
@@ -41,6 +44,8 @@ function toCode(error: { code?: string; message: string; status?: number }): Aut
       return "email_not_confirmed";
     case "weak_password":
       return "weak_password";
+    case "same_password":
+      return "same_password";
     case "user_already_exists":
     case "email_exists":
       return "user_exists";
@@ -133,4 +138,41 @@ export async function switchAccount() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+/** Emails a link to choose a new password. Says the same thing whether or not the account exists. */
+export async function requestPasswordReset(_state: AuthState, formData: FormData): Promise<AuthState> {
+  const email = field(formData, "email");
+  if (!email) return { error: "missing_fields", email };
+
+  const { supabase, error: setupError } = await supabaseOrError();
+  if (!supabase) return { error: setupError, email };
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await siteOrigin()}/auth/callback?next=/reset-password`,
+  });
+  if (error) {
+    const code = toCode(error);
+    if (code === "rate_limited" || code === "invalid_email") return { error: code, email };
+  }
+  return { checkEmail: true, email };
+}
+
+/** Sets a new password for the user who arrived from the reset link. */
+export async function updatePassword(_state: AuthState, formData: FormData): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  if (!password || !confirm) return { error: "missing_fields" };
+  if (password !== confirm) return { error: "password_mismatch" };
+
+  const { supabase, error: setupError } = await supabaseOrError();
+  if (!supabase) return { error: setupError };
+
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return { error: "reset_expired" };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: toCode(error) };
+
+  redirect("/dashboard");
 }

@@ -22,6 +22,15 @@ export const authErrors: Record<AuthErrorCode | "google" | "callback", { en: str
     en: "Sign in isn't set up yet on this server.",
     es: "El inicio de sesión todavía no está configurado en este servidor.",
   },
+  password_mismatch: { en: "The passwords don't match.", es: "Las contraseñas no coinciden." },
+  same_password: {
+    en: "Choose a password different from your current one.",
+    es: "Elegí una contraseña distinta a la que ya tenías.",
+  },
+  reset_expired: {
+    en: "This reset link expired or was already used. Ask for a new one.",
+    es: "Este link para cambiar la contraseña venció o ya se usó. Pedí uno nuevo.",
+  },
   unknown: { en: "Something went wrong. Try again.", es: "Algo salió mal. Probá de nuevo." },
   google: { en: "We couldn't start Google sign-in. Try again.", es: "No pudimos iniciar sesión con Google. Probá de nuevo." },
   callback: {
