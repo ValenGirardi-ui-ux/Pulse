@@ -1,4 +1,5 @@
 import type { Lang } from "../../i18n";
+import { askPulse } from "../assistant-actions";
 import type { Report } from "./data";
 
 export type ChatMessage = {
@@ -14,13 +15,11 @@ export const suggestions = [
   "Explain my score in simple words",
 ];
 
-// Connect the AI model here. It receives the whole conversation, the current report as context and the
-// language the user picked, and must return the assistant's reply in that language. The UI doesn't need to change.
+/**
+ * Answers the last question with fixed rules on the server (no AI): from the LLM report when there is one,
+ * otherwise from the scans of the current site. It replies in the language the user picked.
+ */
 export async function askAssistant(messages: ChatMessage[], report: Report | null, lang: Lang = "en"): Promise<string> {
-  void messages;
-  void report;
-  await new Promise((resolve) => setTimeout(resolve, 900));
-  return lang === "es"
-    ? "El modelo de IA todavía no está conectado. Cuando lo esté, voy a responder acá usando este informe como contexto."
-    : "The AI model isn't connected yet. Once it is, I'll answer here using this report as context.";
+  const question = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
+  return askPulse(question, lang, report);
 }

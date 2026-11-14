@@ -144,10 +144,10 @@ export function AgentPanel() {
         <div className="relative h-full overflow-hidden rounded-2xl" inert={!open}>
           <div className="h-full md:absolute md:inset-y-0 md:left-0 md:w-[22rem]">
             <AssistantPanel
-              subtitle={t("Your AI agent for tivvo.com", "Tu agente de IA para tivvo.com")}
+              subtitle={t("Answers from your scans", "Responde con tus escaneos")}
               greeting={t(
-                "Hi! I'm Pulse AI. I know your scans, issues and monitors. Ask me what to fix first, why something changed, or how to solve an issue.",
-                "¡Hola! Soy Pulse AI. Conozco tus escaneos, problemas y monitores. Preguntame qué arreglar primero, por qué cambió algo o cómo resolver un problema.",
+                "Hi! I know your scans and issues. Ask me what to fix first, why your score changed, or how to solve an issue.",
+                "¡Hola! Conozco tus escaneos y problemas. Preguntame qué arreglar primero, por qué cambió tu puntaje o cómo resolver un problema.",
               )}
               suggestions={suggestions}
               closeClassName=""

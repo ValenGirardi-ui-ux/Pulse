@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
-import { getCurrentSite } from "@/lib/sites";
+import { getCurrentSite, getSites } from "@/lib/sites";
 import { T } from "../../i18n";
 import { LanguageSwitch } from "../../language-switch";
 import { Segmented, Toggle } from "../controls";
@@ -8,6 +8,7 @@ import { Field, Section } from "../form-layout";
 import { SiteForm } from "./site-form";
 import { inputClass as input, primaryButtonClass, secondaryButtonClass as secondaryButton } from "../styles";
 import { RemoveSite } from "./remove-site";
+import { SwitchSiteButton } from "./switch-site-button";
 
 export const metadata: Metadata = {
   title: "Settings · Pulse",
@@ -27,7 +28,7 @@ export default function SettingsPage() {
           <T en="Settings" es="Configuración" />
         </h1>
         <p className="mt-1 text-[13px] text-[#8a91a3]">
-          <T en="Manage your site, your alerts and your account." es="Administrá tu sitio, tus alertas y tu cuenta." />
+          <T en="Manage your sites, your alerts and your account." es="Administrá tus sitios, tus alertas y tu cuenta." />
         </p>
       </div>
 
@@ -44,11 +45,18 @@ export default function SettingsPage() {
           </Row>
         </Section>
 
-        <Section title={<T en="Site" es="Sitio" />} description={<T en="The website Pulse checks." es="El sitio web que revisa Pulse." />}>
+        <Section
+          title={<T en="Current site" es="Sitio actual" />}
+          description={<T en="The website the dashboard is showing now." es="El sitio que está mostrando el dashboard ahora." />}
+        >
           <Suspense fallback={<SiteFormSkeleton />}>
             <CurrentSiteForm />
           </Suspense>
         </Section>
+
+        <Suspense fallback={null}>
+          <YourSites />
+        </Suspense>
 
         <Section
           title={<T en="Scanning" es="Escaneos" />}
@@ -84,33 +92,6 @@ export default function SettingsPage() {
           ))}
         </Section>
 
-        <Section
-          title={<T en="Ask Pulse" es="Preguntale a Pulse" />}
-          description={
-            <T
-              en="AI credits are used each time you ask a question."
-              es="Se usan créditos de IA cada vez que hacés una pregunta."
-            />
-          }
-        >
-          <div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-[13px] font-medium">
-                120{" "}
-                <span className="font-normal text-[#8a91a3]">
-                  <T en="of 200 credits left" es="de 200 créditos disponibles" />
-                </span>
-              </p>
-              <span className="text-xs text-[#8a91a3]">
-                <T en="Resets Nov 1" es="Se renuevan el 1 nov" />
-              </span>
-            </div>
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#f1f2f6]">
-              <div className="h-full w-[60%] rounded-full bg-[#4c2882]" />
-            </div>
-          </div>
-        </Section>
-
         <Suspense fallback={null}>
           <DangerZone />
         </Suspense>
@@ -142,7 +123,45 @@ function Row({ label, hint, children }: { label: ReactNode; hint: ReactNode; chi
 
 async function CurrentSiteForm() {
   const site = await getCurrentSite();
-  return <SiteForm site={site} />;
+  return <SiteForm key={site?.id ?? "none"} site={site} />;
+}
+
+async function YourSites() {
+  const [sites, current] = await Promise.all([getSites(), getCurrentSite()]);
+  if (sites.length === 0) return null;
+
+  return (
+    <div id="add-site" className="scroll-mt-24">
+      <Section
+        title={<T en="Your sites" es="Tus sitios" />}
+        description={<T en="Switch between your sites or add another one." es="Cambiá entre tus sitios o agregá otro." />}
+      >
+        <ul className="overflow-hidden rounded-2xl border border-black/[0.07]">
+          {sites.map((site) => (
+            <li key={site.id} className="flex items-center gap-3 border-b border-[#f1f2f6] px-4 py-3 last:border-b-0">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-medium">{site.name}</p>
+                <p className="truncate font-mono text-[11px] text-[#8a91a3]">{site.url}</p>
+              </div>
+              {site.id === current?.id ? (
+                <span className="rounded-full bg-[#4c2882]/[0.08] px-2.5 py-1 text-[11px] font-medium text-[#4c2882]">
+                  <T en="Showing now" es="Mostrando ahora" />
+                </span>
+              ) : (
+                <SwitchSiteButton siteId={site.id} />
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="rounded-2xl border border-dashed border-[#d9dce6] p-4">
+          <p className="mb-4 text-[13px] font-medium">
+            <T en="Add another site" es="Agregar otro sitio" />
+          </p>
+          <SiteForm site={null} adding />
+        </div>
+      </Section>
+    </div>
+  );
 }
 
 function SiteFormSkeleton() {

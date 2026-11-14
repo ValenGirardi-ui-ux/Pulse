@@ -1,4 +1,5 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { cache } from "react";
 import { getCurrentUser } from "./auth";
 import { createClient } from "./supabase/server";
@@ -13,10 +14,27 @@ export const getSites = cache(async (): Promise<Site[]> => {
   return data;
 });
 
-/** The site the dashboard is showing. For now, the user's first site. */
+const SITE_COOKIE = "pulse-site";
+
+/** The site the dashboard is showing: the one the user picked last, or else their first site. */
 export async function getCurrentSite(): Promise<Site | null> {
   const sites = await getSites();
-  return sites[0] ?? null;
+  const chosen = (await cookies()).get(SITE_COOKIE)?.value;
+  return sites.find((site) => site.id === chosen) ?? sites[0] ?? null;
+}
+
+/** Remembers which site the dashboard shows. Only works for the user's own sites. Server Actions only. */
+export async function rememberSite(id: string): Promise<boolean> {
+  const sites = await getSites();
+  if (!sites.some((site) => site.id === id)) return false;
+  (await cookies()).set(SITE_COOKIE, id, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  return true;
 }
 
 /** Turns "https://www.Example.com/" into "www.example.com". Returns null if it isn't a valid domain. */
