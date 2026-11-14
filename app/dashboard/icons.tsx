@@ -55,9 +55,36 @@ export function IconScan({ className }: { className?: string }) {
 
 export function IconGear({ className }: { className?: string }) {
   return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function IconUser({ className }: { className?: string }) {
+  return (
     <Svg className={className}>
-      <circle cx="8" cy="8" r="2" />
-      <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" />
+      <circle cx="8" cy="8" r="6.25" />
+      <circle cx="8" cy="6.5" r="2.25" />
+      <path d="M4.2 12.9a4.5 4.5 0 0 1 7.6 0" />
+    </Svg>
+  );
+}
+
+export function IconLogout({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <path d="M6.5 2.5H4a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 4 13.5h2.5M10.5 11 13.5 8l-3-3M13.5 8H6" />
     </Svg>
   );
 }
@@ -100,5 +127,31 @@ export function IconSpark({ className }: { className?: string }) {
       <path d="M8 1.5c.3 2.9 1.6 4.2 4.5 4.5v.01C9.6 6.3 8.3 7.6 8 10.5 7.7 7.6 6.4 6.3 3.5 6 6.4 5.7 7.7 4.4 8 1.5Z" />
       <path d="M12.5 10c.15 1.3.7 1.85 2 2-1.3.15-1.85.7-2 2-.15-1.3-.7-1.85-2-2 1.3-.15 1.85-.7 2-2Z" />
     </svg>
+  );
+}
+
+export function IconBot({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <rect x="2.5" y="5" width="11" height="8" rx="2" />
+      <path d="M8 5V2.5M6 9h.01M10 9h.01M1 8.5v2M15 8.5v2" />
+    </Svg>
+  );
+}
+
+export function IconDownload({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11" />
+    </Svg>
+  );
+}
+
+export function IconCopy({ className }: { className?: string }) {
+  return (
+    <Svg className={className}>
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+      <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+    </Svg>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useT } from "../../i18n";
 import { Segmented } from "../controls";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "../styles";
 import {
@@ -18,18 +19,29 @@ export type NewMonitor =
   | { type: "website"; target: string; interval: Interval }
   | { type: "server"; target: string; interval: Interval; ports: number[] };
 
-const types: { type: MonitorType; title: string; description: string; checks: string }[] = [
+const types: {
+  type: MonitorType;
+  title: string;
+  description: string;
+  descriptionEs: string;
+  checks: string;
+  checksEs: string;
+}[] = [
   {
     type: "website",
     title: "Website",
     description: "Check a URL from the outside, like a visitor would.",
+    descriptionEs: "Revisa una URL desde afuera, como lo haría un visitante.",
     checks: "Online · HTTP code · Response time · SSL · Error pages · Broken links",
+    checksEs: "En línea · Código HTTP · Tiempo de respuesta · SSL · Páginas con error · Links rotos",
   },
   {
     type: "server",
     title: "Server",
     description: "Check an IP address or server domain directly.",
+    descriptionEs: "Revisa directamente una dirección IP o el dominio de un servidor.",
     checks: "Availability · Ping · Latency · Ports",
+    checksEs: "Disponibilidad · Ping · Latencia · Puertos",
   },
 ];
 
@@ -53,6 +65,7 @@ export function NewMonitorDialog({
   const [error, setError] = useState<string | null>(null);
   const [portError, setPortError] = useState<string | null>(null);
   const targetRef = useRef<HTMLInputElement>(null);
+  const t = useT();
 
   useEffect(() => {
     if (!open) {
@@ -93,15 +106,15 @@ export function NewMonitorDialog({
     if (!portDraft.trim()) return ports;
     const value = Number(portDraft.trim());
     if (!Number.isInteger(value) || value < 1 || value > 65535) {
-      setPortError("Use a number between 1 and 65535.");
+      setPortError(t("Use a number between 1 and 65535.", "Usá un número entre 1 y 65535."));
       return null;
     }
     if (ports.includes(value)) {
-      setPortError(`Port ${value} is already in the list.`);
+      setPortError(t(`Port ${value} is already in the list.`, `El puerto ${value} ya está en la lista.`));
       return null;
     }
     if (ports.length >= MAX_PORTS) {
-      setPortError(`You can check up to ${MAX_PORTS} ports.`);
+      setPortError(t(`You can check up to ${MAX_PORTS} ports.`, `Podés revisar hasta ${MAX_PORTS} puertos.`));
       return null;
     }
     return [...ports, value].sort((a, b) => a - b);
@@ -129,19 +142,24 @@ export function NewMonitorDialog({
 
     if (type === "website") {
       if (!isValidUrl(target)) {
-        setError("Enter a valid URL, like yoursite.com");
+        setError(t("Enter a valid URL, like yoursite.com", "Ingresá una URL válida, como tusitio.com"));
         return;
       }
       onCreate({ type, target: cleanUrl(target), interval });
     } else {
       if (!isValidHost(target)) {
-        setError("Enter a valid IP address or domain, like 192.168.0.10 or api.yoursite.com");
+        setError(
+          t(
+            "Enter a valid IP address or domain, like 192.168.0.10 or api.yoursite.com",
+            "Ingresá una IP o un dominio válido, como 192.168.0.10 o api.tusitio.com",
+          ),
+        );
         return;
       }
       const finalPorts = withDraftPort();
       if (!finalPorts) return;
       if (finalPorts.length === 0) {
-        setPortError("Add at least one port.");
+        setPortError(t("Add at least one port.", "Agregá al menos un puerto."));
         return;
       }
       onCreate({ type, target: target.trim().toLowerCase(), interval, ports: finalPorts });
@@ -175,13 +193,13 @@ export function NewMonitorDialog({
       >
         <div className="border-b border-[#f1f2f6] px-5 py-4">
           <h2 id="new-monitor-title" className="text-sm font-semibold">
-            New monitor
+            {t("New monitor", "Nuevo monitor")}
           </h2>
-          <p className="mt-0.5 text-xs text-[#8a91a3]">Choose what Pulse should watch.</p>
+          <p className="mt-0.5 text-xs text-[#8a91a3]">{t("Choose what Pulse should watch.", "Elegí qué tiene que vigilar Pulse.")}</p>
         </div>
 
         <div className="space-y-5 px-5 py-5">
-          <div role="radiogroup" aria-label="Monitor type" className="grid grid-cols-2 gap-2.5">
+          <div role="radiogroup" aria-label={t("Monitor type")} className="grid grid-cols-2 gap-2.5">
             {types.map((option) => {
               const active = option.type === type;
               return (
@@ -198,7 +216,7 @@ export function NewMonitorDialog({
                   }`}
                 >
                   <span className="flex items-center justify-between">
-                    <span className="text-[13px] font-medium">{option.title}</span>
+                    <span className="text-[13px] font-medium">{t(option.title)}</span>
                     <span
                       className={`flex size-3.5 items-center justify-center rounded-full border ${
                         active ? "border-[#4c2882]" : "border-[#c9cedd]"
@@ -207,8 +225,8 @@ export function NewMonitorDialog({
                       {active && <span className="size-1.5 rounded-full bg-[#4c2882]" />}
                     </span>
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-[#5b6478]">{option.description}</span>
-                  <span className="mt-2 block font-mono text-[10px] leading-4 text-[#9aa1b2]">{option.checks}</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#5b6478]">{t(option.description, option.descriptionEs)}</span>
+                  <span className="mt-2 block font-mono text-[10px] leading-4 text-[#9aa1b2]">{t(option.checks, option.checksEs)}</span>
                 </button>
               );
             })}
@@ -216,7 +234,7 @@ export function NewMonitorDialog({
 
           <div>
             <label htmlFor="monitor-target" className="mb-1.5 block text-xs font-medium text-[#3c4558]">
-              {type === "website" ? "URL" : "IP address or domain"}
+              {type === "website" ? "URL" : t("IP address or domain", "Dirección IP o dominio")}
             </label>
             <input
               ref={targetRef}
@@ -226,7 +244,7 @@ export function NewMonitorDialog({
                 setTarget(event.target.value);
                 setError(null);
               }}
-              placeholder={type === "website" ? "yoursite.com" : "192.168.0.10 or api.yoursite.com"}
+              placeholder={type === "website" ? t("yoursite.com", "tusitio.com") : t("192.168.0.10 or api.yoursite.com", "192.168.0.10 o api.tusitio.com")}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "monitor-target-error" : undefined}
               autoComplete="off"
@@ -243,7 +261,7 @@ export function NewMonitorDialog({
           {type === "server" && (
             <div>
               <label htmlFor="monitor-port" className="mb-1.5 block text-xs font-medium text-[#3c4558]">
-                Ports to check
+                {t("Ports to check", "Puertos a revisar")}
               </label>
               <div
                 className={`flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border bg-white px-2 py-1.5 transition-colors focus-within:border-[#4c2882]/50 focus-within:ring-4 focus-within:ring-[#4c2882]/[0.08] ${
@@ -260,7 +278,7 @@ export function NewMonitorDialog({
                     <button
                       type="button"
                       onClick={() => setPorts(ports.filter((p) => p !== port))}
-                      aria-label={`Remove port ${port}`}
+                      aria-label={t(`Remove port ${port}`, `Quitar puerto ${port}`)}
                       className="flex size-4 items-center justify-center rounded text-[#8a91a3] transition-colors hover:bg-[#e3e6ef] hover:text-[#0f1a2e]"
                     >
                       ×
@@ -277,22 +295,28 @@ export function NewMonitorDialog({
                   onKeyDown={onPortKey}
                   onBlur={addPort}
                   inputMode="numeric"
-                  placeholder={ports.length ? "Add port" : "22, 80, 443…"}
+                  placeholder={ports.length ? t("Add port", "Agregar puerto") : "22, 80, 443…"}
                   aria-describedby="monitor-port-hint"
                   className="h-6 min-w-20 flex-1 bg-transparent px-1 font-mono text-[12px] outline-none placeholder:font-sans placeholder:text-[#9aa1b2]"
                 />
               </div>
               <p id="monitor-port-hint" className={`mt-1.5 text-xs ${portError ? "text-red-600" : "text-[#8a91a3]"}`}>
-                {portError ?? "Press Enter to add a port. Pulse checks if each one is open."}
+                {portError ??
+                  t(
+                    "Press Enter to add a port. Pulse checks if each one is open.",
+                    "Apretá Enter para agregar un puerto. Pulse revisa si cada uno está abierto.",
+                  )}
               </p>
             </div>
           )}
 
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-medium text-[#3c4558]">Check every</p>
+              <p className="text-xs font-medium text-[#3c4558]">{t("Check every", "Revisar cada")}</p>
               <p className="mt-0.5 text-xs text-[#8a91a3]">
-                {type === "website" ? "5 minutes works for most sites." : "1 minute catches outages fast."}
+                {type === "website"
+                  ? t("5 minutes works for most sites.", "5 minutos alcanza para la mayoría de los sitios.")
+                  : t("1 minute catches outages fast.", "1 minuto detecta las caídas rápido.")}
               </p>
             </div>
             <Segmented label="Check interval" options={intervals} value={interval} onChange={setCheckInterval} />
@@ -301,10 +325,10 @@ export function NewMonitorDialog({
 
         <div className="flex justify-end gap-2 border-t border-[#f1f2f6] px-5 py-3.5">
           <button type="button" onClick={cancel} className={secondaryButtonClass}>
-            Cancel
+            {t("Cancel", "Cancelar")}
           </button>
           <button type="submit" className={primaryButtonClass}>
-            Create monitor
+            {t("Create monitor", "Crear monitor")}
           </button>
         </div>
       </form>

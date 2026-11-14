@@ -28,7 +28,7 @@ export function SmoothScroll() {
         running = false;
       }
 
-      window.scrollTo(0, current);
+      window.scrollTo({ top: current, behavior: "instant" });
       if (running) frame = requestAnimationFrame(step);
     }
 

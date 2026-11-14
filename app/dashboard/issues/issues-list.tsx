@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { issues, severityDot, type Category, type Severity } from "../data";
+import type { IssueView } from "@/lib/scan/data";
+import { severityDot, type Category, type Severity } from "../data";
+import { useAgent } from "../agent";
+import { useLang, useT } from "../../i18n";
 import { IconChevron, IconSpark } from "../icons";
 
 const filters: ("All" | Category)[] = ["All", "Development", "SEO", "Marketing", "Performance"];
@@ -11,9 +14,12 @@ const groups: { severity: Severity; label: string }[] = [
   { severity: "Minor", label: "Minor" },
 ];
 
-export function IssuesList() {
+export function IssuesList({ issues }: { issues: IssueView[] }) {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
-  const [openId, setOpenId] = useState<string | null>(issues[0].id);
+  const [openId, setOpenId] = useState<string | null>(issues[0]?.key ?? null);
+  const { ask } = useAgent();
+  const lang = useLang();
+  const t = useT();
 
   const visible = issues.filter((issue) => filter === "All" || issue.category === filter);
 
@@ -35,12 +41,16 @@ export function IssuesList() {
                   : "border-[#ececf1] text-[#5b6478] hover:border-[#d9dce6] hover:text-[#0f1a2e]"
               }`}
             >
-              {name}
+              {name === "All" ? t("All", "Todos") : t(name)}
               <span className={`font-mono text-[10px] ${active ? "text-white/60" : "text-[#9aa1b2]"}`}>{count}</span>
             </button>
           );
         })}
       </div>
+
+      {visible.length === 0 && (
+        <p className="text-[13px] text-[#8a91a3]">{t("No issues in this category.", "No hay problemas en esta categoría.")}</p>
+      )}
 
       {groups.map(({ severity, label }) => {
         const items = visible.filter((issue) => issue.severity === severity);
@@ -50,31 +60,32 @@ export function IssuesList() {
           <section key={severity}>
             <h2 className="mb-2.5 flex items-center gap-2 text-xs font-medium text-[#5b6478]">
               <span className={`size-1.5 rounded-full ${severityDot[severity]}`} />
-              {label}
+              {t(label)}
               <span className="font-mono text-[11px] text-[#9aa1b2]">{items.length}</span>
             </h2>
 
-            <ul className="overflow-hidden rounded-xl border border-[#ececf1]">
+            <ul className="overflow-hidden rounded-2xl border border-black/[0.07] bg-white shadow-[0_8px_24px_rgba(15,26,46,0.08)]">
               {items.map((issue) => {
-                const open = openId === issue.id;
+                const open = openId === issue.key;
+                const text = issue[lang];
                 return (
-                  <li key={issue.id} className="border-b border-[#f1f2f6] last:border-b-0">
+                  <li key={issue.key} className="border-b border-[#f1f2f6] last:border-b-0">
                     <button
                       type="button"
-                      onClick={() => setOpenId(open ? null : issue.id)}
+                      onClick={() => setOpenId(open ? null : issue.key)}
                       aria-expanded={open}
                       className="group flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-[#fafafb]"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium">{issue.title}</span>
-                        <span className="mt-0.5 block truncate text-xs text-[#8a91a3]">{issue.impact}</span>
+                        <span className="block truncate text-[13px] font-medium">{text.title}</span>
+                        <span className="mt-0.5 block truncate text-xs text-[#8a91a3]">{text.impact}</span>
                       </span>
-                      <span className="hidden w-24 shrink-0 text-xs text-[#5b6478] md:block">{issue.category}</span>
-                      <span className="hidden w-20 shrink-0 truncate font-mono text-[11px] text-[#8a91a3] sm:block">
+                      <span className="hidden w-24 shrink-0 text-xs text-[#5b6478] md:block">{t(issue.category)}</span>
+                      <span className="hidden w-24 shrink-0 truncate font-mono text-[11px] text-[#8a91a3] sm:block">
                         {issue.page}
                       </span>
-                      <span className="hidden w-14 shrink-0 text-right font-mono text-[11px] text-[#9aa1b2] sm:block">
-                        {issue.found}
+                      <span className="hidden w-16 shrink-0 text-right font-mono text-[11px] text-[#9aa1b2] sm:block">
+                        {issue.found[lang]}
                       </span>
                       <IconChevron
                         className={`size-3.5 shrink-0 text-[#c9cedd] transition-transform duration-200 group-hover:text-[#5b6478] ${
@@ -92,9 +103,9 @@ export function IssuesList() {
                       <div className="overflow-hidden">
                         <div className="px-4 pb-4">
                           <div className="rounded-lg bg-[#fafafb] p-4">
-                            <p className="text-xs font-medium text-[#5b6478]">How to fix</p>
+                            <p className="text-xs font-medium text-[#5b6478]">{t("How to fix", "Cómo arreglarlo")}</p>
                             <ol className="mt-2.5 space-y-2">
-                              {issue.fix.map((step, index) => (
+                              {text.fix.map((step, index) => (
                                 <li key={step} className="flex gap-3 text-[13px] leading-5 text-[#3c4558]">
                                   <span className="mt-px font-mono text-[11px] text-[#9aa1b2]">{index + 1}</span>
                                   {step}
@@ -104,17 +115,22 @@ export function IssuesList() {
                             <div className="mt-4 flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
-                                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#4c2882] px-3 text-xs font-medium text-white transition-colors hover:bg-[#5a3196]"
+                                onClick={() =>
+                                  ask(
+                                    t(
+                                      `Help me fix "${issue.en.title}" (${issue.page}). ${issue.en.impact}`,
+                                      `Ayudame a arreglar "${issue.es.title}" (${issue.page}). ${issue.es.impact}`,
+                                    ),
+                                  )
+                                }
+                                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#4c2882] px-3 text-xs font-medium text-white transition-colors hover:bg-[#5a3196]"
                               >
                                 <IconSpark className="size-3" />
-                                Ask Pulse for help
+                                {t("Ask Pulse for help", "Pedirle ayuda a Pulse")}
                               </button>
-                              <button
-                                type="button"
-                                className="inline-flex h-8 items-center rounded-lg border border-[#e3e6ef] bg-white px-3 text-xs font-medium transition-colors hover:border-[#c9cedd]"
-                              >
-                                Mark as fixed
-                              </button>
+                              <span className="text-xs text-[#9aa1b2]">
+                                {t("Fixed it? Run a new scan to confirm.", "¿Lo arreglaste? Hacé un nuevo escaneo para confirmarlo.")}
+                              </span>
                             </div>
                           </div>
                         </div>

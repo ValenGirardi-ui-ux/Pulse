@@ -1,0 +1,42 @@
+import "server-only";
+import { redirect } from "next/navigation";
+import { cache } from "react";
+import { createClient } from "./supabase/server";
+
+export type CurrentUser = {
+  id: string;
+  email: string;
+  name: string;
+  /** False for people who only sign in with Google. */
+  hasPassword: boolean;
+  /** The uploaded profile photo, or else the one from Google. */
+  photoUrl: string | null;
+  /** True when the user uploaded their own photo (it can be removed). */
+  hasCustomPhoto: boolean;
+};
+
+/** The signed-in user, validated against Supabase. Redirects to /login when there's no session. */
+export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) redirect("/login");
+
+  const { user } = data;
+  const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle();
+  const metadataName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
+  const email = user.email ?? "";
+  const googlePhoto = user.user_metadata?.avatar_url ?? user.user_metadata?.picture;
+  const customPhoto = profile?.avatar_url ?? null;
+
+  const providers: unknown = user.app_metadata?.providers ?? [user.app_metadata?.provider];
+  const hasPassword = Array.isArray(providers) && providers.includes("email");
+
+  return {
+    id: user.id,
+    email,
+    name: profile?.full_name || metadataName || email.split("@")[0],
+    hasPassword,
+    photoUrl: customPhoto || (typeof googlePhoto === "string" ? googlePhoto : null),
+    hasCustomPhoto: Boolean(customPhoto),
+  };
+});
