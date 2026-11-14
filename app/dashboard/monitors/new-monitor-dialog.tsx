@@ -68,10 +68,7 @@ export function NewMonitorDialog({
   const t = useT();
 
   useEffect(() => {
-    if (!open) {
-      setShown(false);
-      return;
-    }
+    if (!open) return;
     const frame = requestAnimationFrame(() => setShown(true));
     targetRef.current?.focus();
 
@@ -82,6 +79,7 @@ export function NewMonitorDialog({
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKey);
+      setShown(false);
     };
   }, [open, onClose]);
 

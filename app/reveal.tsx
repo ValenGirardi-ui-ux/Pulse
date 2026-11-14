@@ -18,8 +18,9 @@ export function Reveal({
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(true);
-      return;
+      // No animation wanted: show it on the next frame.
+      const frame = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(frame);
     }
 
     const observer = new IntersectionObserver(

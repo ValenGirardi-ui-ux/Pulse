@@ -24,10 +24,7 @@ export function RemoveSite({ siteId, site }: { siteId: string; site: string }) {
   }
 
   useEffect(() => {
-    if (!open) {
-      setShown(false);
-      return;
-    }
+    if (!open) return;
     const frame = requestAnimationFrame(() => setShown(true));
     noRef.current?.focus();
 
@@ -38,6 +35,7 @@ export function RemoveSite({ siteId, site }: { siteId: string; site: string }) {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKey);
+      setShown(false);
     };
   }, [open]);
 
