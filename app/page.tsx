@@ -11,6 +11,7 @@ import { SiteHeader } from "./site-header";
 import { SmoothScroll } from "./smooth-scroll";
 import { Steps } from "./steps";
 import { ContactForm } from "./contact-form";
+import { HeroDashboard } from "./hero-dashboard";
 
 const pulse = Sora({
   weight: ["300", "400", "600"],
@@ -284,12 +285,7 @@ export default function Home() {
               className="absolute -inset-10 -z-0 rounded-[3rem] bg-[radial-gradient(ellipse_at_center,rgba(76,40,130,0.12),transparent_70%)]"
             />
             <div className="relative overflow-visible">
-              <div
-                className="relative min-h-[15rem] origin-center sm:min-h-[22rem] overflow-hidden rounded-2xl bg-[#e8eaef] transition-transform duration-500 ease-out hover:scale-105"
-                aria-hidden="true"
-              >
-                <span className="hero-card-sheen pointer-events-none absolute inset-0" />
-              </div>
+              <HeroDashboard />
             </div>
           </Reveal>
         </div>
