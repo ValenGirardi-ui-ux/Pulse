@@ -55,8 +55,8 @@ export function PreferencesForm({ preferences, accountEmail }: { preferences: Pr
           <Row
             label={t("Daily automatic scan", "Escaneo automático diario")}
             hint={t(
-              "Pulse scans all your sites once a day, around 9:00 (Argentina time).",
-              "Pulse escanea todos tus sitios una vez por día, cerca de las 9:00 (hora de Argentina).",
+              "Pulse scans all your sites every 24 hours.",
+              "Pulse escanea todos tus sitios cada 24 horas.",
             )}
           >
             <Toggle label="Daily automatic scan" name="auto_scans" defaultOn={preferences.autoScans} />

@@ -56,13 +56,13 @@ async function ScansContent() {
         <div className="flex items-center gap-2.5">
           <span className="size-2 rounded-full bg-[#c9cedd]" />
           <span className="text-[13px] font-medium">
-            <T en="Daily automatic scan" es="Escaneo automático diario" />
+            <T en="Automatic scan every 24 hours" es="Escaneo automático cada 24 horas" />
           </span>
         </div>
         <p className="text-[13px] text-[#5b6478]">
           <T
-            en={`Pulse scans ${data.site?.url ?? "your sites"} once a day (you can turn it off in Settings). Press "Scan now" whenever you want an extra one.`}
-            es={`Pulse escanea ${data.site?.url ?? "tus sitios"} una vez por día (lo podés apagar en Configuración). Tocá "Escanear ahora" cuando quieras uno extra.`}
+            en={`Pulse scans ${data.site?.url ?? "your sites"} every 24 hours (you can turn it off in Settings). Press "Scan now" whenever you want an extra one.`}
+            es={`Pulse escanea ${data.site?.url ?? "tus sitios"} cada 24 horas (lo podés apagar en Configuración). Tocá "Escanear ahora" cuando quieras uno extra.`}
           />
         </p>
       </div>
