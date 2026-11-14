@@ -7,7 +7,6 @@ import { IconBot, IconCheck, IconChevron, IconCopy, IconDownload, IconSpark } fr
 import { inputClass, primaryButtonClass } from "../styles";
 import {
   analysisSteps,
-  analyzeSite,
   areas,
   normalizeUrl,
   severityOrder,
@@ -17,6 +16,7 @@ import {
 } from "./data";
 import { AssistantPanel, useAssistant } from "./assistant-panel";
 import { downloadFile, printHtml, reportFileName, toHtml, toMarkdown } from "./export";
+import { analyzeSiteAction } from "./actions";
 import { localizeFinding } from "./findings-es";
 
 const card = "rounded-2xl border border-black/[0.07] bg-white shadow-[0_8px_24px_rgba(15,26,46,0.08)]";
@@ -28,7 +28,6 @@ const areaInfo: Record<Area, string> = {
   Metadata: "Titles, descriptions, language and canonical URLs",
   "Structured data": "Schema.org JSON-LD for your business and products",
   JavaScript: "Content that's visible without running scripts",
-  CSS: "Text hidden or injected by styles and interactions",
 };
 
 const areaInfoEs: Record<Area, string> = {
@@ -38,7 +37,6 @@ const areaInfoEs: Record<Area, string> = {
   Metadata: "Títulos, descripciones, idioma y URL canónicas",
   "Structured data": "JSON-LD de Schema.org para tu negocio y tus productos",
   JavaScript: "Contenido que se ve sin ejecutar scripts",
-  CSS: "Texto oculto o insertado por estilos e interacciones",
 };
 
 const groupLabel = { Critical: "Critical", Warning: "Warnings", Minor: "Minor" } as const;
@@ -74,14 +72,24 @@ export function LlmOptimizationView() {
     setStep(0);
     timer.current = setInterval(() => setStep((current) => Math.min(current + 1, analysisSteps.length - 1)), 650);
     try {
-      setReport(await analyzeSite(url));
+      const result = await analyzeSiteAction(url.href);
+      if (result.ok) {
+        setReport(result.report);
+      } else {
+        setError(
+          result.error === "blocked"
+            ? t(
+                "Pulse can only analyze public websites, not local or private addresses.",
+                "Pulse solo puede analizar sitios públicos, no direcciones locales o privadas.",
+              )
+            : t(
+                "We couldn't analyze this site. Check the URL and try again.",
+                "No pudimos analizar este sitio. Revisá la URL y probá de nuevo.",
+              ),
+        );
+      }
     } catch {
-      setError(
-        t(
-          "We couldn't analyze this site. Check the URL and try again.",
-          "No pudimos analizar este sitio. Revisá la URL y probá de nuevo.",
-        ),
-      );
+      setError(t("We couldn't analyze this site. Try again.", "No pudimos analizar este sitio. Probá de nuevo."));
     } finally {
       clearInterval(timer.current);
       setRunning(false);
@@ -255,7 +263,7 @@ function Progress({ step }: { step: number }) {
 function ReportView({ report, onAsk }: { report: Report; onAsk: (text: string) => void }) {
   const t = useT();
   const lang = useLang();
-  const findings = report.findings.map((finding) => localizeFinding(finding, lang, report.host));
+  const findings = report.findings.map((finding) => localizeFinding(finding, lang));
   const [filter, setFilter] = useState<"All" | Area>("All");
   const [openId, setOpenId] = useState<string | null>(findings[0]?.id ?? null);
 
@@ -398,7 +406,7 @@ function ReportView({ report, onAsk }: { report: Report; onAsk: (text: string) =
           {report.passed.map((item) => (
             <li key={item.title} className="flex items-center gap-3 text-[13px] text-[#8a91a3]">
               <IconCheck className="size-3.5 shrink-0 text-emerald-500" />
-              <span className="flex-1 truncate">{t(item.title)}</span>
+              <span className="flex-1 truncate">{item.titleEs ? t(item.title, item.titleEs) : t(item.title)}</span>
               <span className="hidden text-xs sm:block">{t(item.area)}</span>
             </li>
           ))}

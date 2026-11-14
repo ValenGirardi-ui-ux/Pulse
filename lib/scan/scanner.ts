@@ -18,7 +18,7 @@ export type ScanOutcome = {
   statusCode: number | null;
 };
 
-type Fetched = { url: URL; status: number; headers: Headers; body: string; ms: number };
+export type Fetched = { url: URL; status: number; headers: Headers; body: string; ms: number };
 
 class BlockedAddressError extends Error {}
 
@@ -58,7 +58,7 @@ async function assertPublic(url: URL) {
 }
 
 /** fetch() that checks every redirect hop is a public address and stops reading huge bodies. */
-async function fetchPublic(
+export async function fetchPublic(
   input: string | URL,
   { method = "GET", follow = true, timeoutMs = SMALL_TIMEOUT_MS, maxBytes = 256 * 1024 } = {},
 ): Promise<Fetched> {
@@ -103,7 +103,7 @@ async function readText(response: Response, maxBytes: number) {
 
 // ---------- Reading HTML without a parser: good enough for these checks. ----------
 
-function stripNoise(html: string) {
+export function stripNoise(html: string) {
   return html
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
@@ -119,16 +119,16 @@ function parseAttributes(source: string): Record<string, string> {
   return attributes;
 }
 
-function tags(html: string, name: string) {
+export function tags(html: string, name: string) {
   return [...html.matchAll(new RegExp(`<${name}\\b([^>]*)>`, "gi"))].map((match) => parseAttributes(match[1]));
 }
 
-function metaContent(metas: Record<string, string>[], key: string) {
+export function metaContent(metas: Record<string, string>[], key: string) {
   const meta = metas.find((m) => (m.name ?? m.property ?? "").toLowerCase() === key);
   return meta?.content?.trim() ?? "";
 }
 
-function decodeEntities(text: string) {
+export function decodeEntities(text: string) {
   return text
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")

@@ -158,7 +158,7 @@ export const dictionary: Record<string, string> = {
   CSS: "CSS",
   "Fetching robots.txt, sitemap.xml and llms.txt": "Leyendo robots.txt, sitemap.xml y llms.txt",
   "Reading raw HTML without JavaScript": "Leyendo el HTML sin JavaScript",
-  "Rendering pages like a browser": "Renderizando las páginas como un navegador",
+  "Following links to other pages": "Siguiendo links a otras páginas",
   "Checking headings, landmarks and metadata": "Revisando títulos, landmarks y metadatos",
   "Reviewing text content and structured data": "Revisando el texto y los datos estructurados",
   "Writing recommendations": "Escribiendo recomendaciones",
