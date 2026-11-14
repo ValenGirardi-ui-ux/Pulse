@@ -7,7 +7,9 @@ import { Field } from "../form-layout";
 import { inputClass, primaryButtonClass } from "../styles";
 import { saveSite, type SiteFormState } from "./actions";
 
-export function SiteForm({ site }: { site: Site | null }) {
+/** Edits `site`, or adds a new one when it's null. `adding` hides the "no site yet" hint. */
+export function SiteForm({ site, adding = false }: { site: Site | null; adding?: boolean }) {
+  const prefix = adding ? "new-site" : "site";
   const [state, action, pending] = useActionState<SiteFormState, FormData>(saveSite, undefined);
   const t = useT();
 
@@ -25,27 +27,27 @@ export function SiteForm({ site }: { site: Site | null }) {
   return (
     <form action={action} className="space-y-5">
       {site && <input type="hidden" name="id" value={site.id} />}
-      {!site && (
+      {!site && !adding && (
         <p className="rounded-xl border border-dashed border-[#4c2882]/25 bg-[#4c2882]/[0.03] px-4 py-3 text-[13px] text-[#5b6478]">
           {t("You haven't added a site yet. Add one so Pulse can start checking it.", "Todavía no agregaste un sitio. Agregá uno para que Pulse empiece a revisarlo.")}
         </p>
       )}
-      <Field label={t("Name", "Nombre")} htmlFor="site-name">
+      <Field label={t("Name", "Nombre")} htmlFor={`${prefix}-name`}>
         <input
-          id="site-name"
+          id={`${prefix}-name`}
           name="name"
           defaultValue={state?.name ?? site?.name ?? ""}
           placeholder={t("My store", "Mi tienda")}
           className={inputClass}
         />
       </Field>
-      <Field label="URL" htmlFor="site-url">
+      <Field label="URL" htmlFor={`${prefix}-url`}>
         <div className="flex h-9 overflow-hidden rounded-full border border-black/[0.08] transition-colors focus-within:border-[#4c2882]/50 focus-within:ring-4 focus-within:ring-[#4c2882]/[0.08]">
           <span className="flex items-center border-r border-[#ececf1] bg-[#fafafb] px-3 font-mono text-xs text-[#8a91a3]">
             https://
           </span>
           <input
-            id="site-url"
+            id={`${prefix}-url`}
             name="url"
             defaultValue={state?.url ?? site?.url ?? ""}
             placeholder={t("yoursite.com", "tusitio.com")}

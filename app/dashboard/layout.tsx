@@ -1,21 +1,33 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
-import { getCurrentSite } from "@/lib/sites";
+import { getCurrentSite, getSites } from "@/lib/sites";
 import { AccountMenu } from "./account-menu";
 import { AgentPanel, AgentProvider, AgentToggle } from "./agent";
 import { MobileNav } from "./mobile-nav";
 import { Breadcrumb, NavLinks } from "./nav";
 import { ScanButton } from "./scan-dialog";
+import { SiteSwitcher } from "./site-switcher";
 
 async function CurrentAccountMenu() {
   const user = await getCurrentUser();
   return <AccountMenu user={{ name: user.name, email: user.email, photoUrl: user.photoUrl }} />;
 }
 
+async function CurrentSiteSwitcher() {
+  const [sites, current] = await Promise.all([getSites(), getCurrentSite()]);
+  return (
+    <SiteSwitcher
+      key={current?.id ?? "none"}
+      sites={sites.map(({ id, name, url }) => ({ id, name, url }))}
+      currentId={current?.id ?? null}
+    />
+  );
+}
+
 async function CurrentScanButton() {
   const site = await getCurrentSite();
-  return <ScanButton site={site?.url ?? null} />;
+  return <ScanButton key={site?.id ?? "none"} site={site?.url ?? null} />;
 }
 
 function SidebarContent() {
@@ -26,6 +38,10 @@ function SidebarContent() {
           Pulse
         </Link>
       </div>
+
+      <Suspense fallback={<div className="mx-3 mb-3 h-[46px] animate-pulse rounded-2xl bg-[#f4f5f8]" />}>
+        <CurrentSiteSwitcher />
+      </Suspense>
 
       <NavLinks />
 
