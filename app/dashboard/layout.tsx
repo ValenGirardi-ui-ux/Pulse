@@ -9,7 +9,7 @@ import { ScanButton } from "./scan-dialog";
 
 async function CurrentAccountMenu() {
   const user = await getCurrentUser();
-  return <AccountMenu user={{ name: user.name, email: user.email }} />;
+  return <AccountMenu user={{ name: user.name, email: user.email, photoUrl: user.photoUrl }} />;
 }
 
 function SidebarContent() {

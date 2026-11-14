@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   title: "Profile · Pulse",
 };
 
+async function CurrentPhotoPicker() {
+  const user = await getCurrentUser();
+  const initial = (user.name || user.email || "?").charAt(0).toUpperCase();
+  return <PhotoPicker user={{ id: user.id, initial, photoUrl: user.photoUrl, hasCustomPhoto: user.hasCustomPhoto }} />;
+}
+
 async function CurrentProfileForm() {
   const user = await getCurrentUser();
   return <ProfileForm user={{ name: user.name, email: user.email, hasPassword: user.hasPassword }} />;
@@ -41,7 +47,9 @@ export default function ProfilePage() {
           title={<T en="Photo" es="Foto" />}
           description={<T en="Shown in the sidebar and on your activity." es="Se muestra en el menú lateral y en tu actividad." />}
         >
-          <PhotoPicker />
+          <Suspense fallback={<div className="size-14 animate-pulse rounded-full bg-[#ececf1]" />}>
+            <CurrentPhotoPicker />
+          </Suspense>
         </Section>
 
         <Suspense fallback={<ProfileFormSkeleton />}>

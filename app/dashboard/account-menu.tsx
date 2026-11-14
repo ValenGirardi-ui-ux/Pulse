@@ -9,7 +9,19 @@ import { IconGear, IconLogout, IconUser } from "./icons";
 const item =
   "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] text-[#3c4558] transition-colors hover:bg-black/[0.04] hover:text-[#0f1a2e]";
 
-export type AccountUser = { name: string; email: string };
+export type AccountUser = { name: string; email: string; photoUrl?: string | null };
+
+function Avatar({ photoUrl, initial }: { photoUrl?: string | null; initial: string }) {
+  if (photoUrl) {
+    // eslint-disable-next-line @next/next/no-img-element -- photo from Supabase Storage or Google
+    return <img src={photoUrl} alt="" referrerPolicy="no-referrer" className="size-7 shrink-0 rounded-full object-cover" />;
+  }
+  return (
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0f1a2e] text-[11px] font-medium text-white">
+      {initial}
+    </span>
+  );
+}
 
 export function AccountMenu({ user }: { user: AccountUser | null }) {
   const [open, setOpen] = useState(false);
@@ -47,9 +59,7 @@ export function AccountMenu({ user }: { user: AccountUser | null }) {
           className="absolute inset-x-3 bottom-full mb-1 rounded-2xl border border-black/[0.07] bg-white p-1.5 shadow-[0_16px_40px_rgba(15,26,46,0.14)]"
         >
           <div className="flex items-center gap-2.5 px-2.5 py-2">
-            <span className="flex size-7 items-center justify-center rounded-full bg-[#0f1a2e] text-[11px] font-medium text-white">
-              {initial}
-            </span>
+            <Avatar photoUrl={user?.photoUrl} initial={initial} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-medium">{name}</p>
               <p className="truncate font-mono text-[11px] text-[#8a91a3]">{email}</p>
@@ -87,9 +97,7 @@ export function AccountMenu({ user }: { user: AccountUser | null }) {
           open ? "bg-black/[0.06]" : "bg-black/[0.03] hover:bg-black/[0.05]"
         }`}
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-[#0f1a2e] text-[11px] font-medium text-white">
-          {initial}
-        </span>
+        <Avatar photoUrl={user?.photoUrl} initial={initial} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium">{name}</p>
           <p className="truncate font-mono text-[11px] text-[#8a91a3]">{email}</p>
