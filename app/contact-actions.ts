@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
 export type ContactState =
@@ -44,24 +45,7 @@ export async function sendContactMessage(_state: ContactState, formData: FormDat
  * CONTACT_NOTIFY_EMAIL are set; the message is already saved in Supabase either way.
  */
 async function notifyByEmail({ name, email, message }: { name: string; email: string; message: string }) {
-  const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_NOTIFY_EMAIL;
-  if (!apiKey || !to) return;
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: process.env.CONTACT_FROM_EMAIL || "Pulse <onboarding@resend.dev>",
-        to,
-        reply_to: email,
-        subject: `Nuevo mensaje de contacto: ${name}`,
-        text: `${name} <${email}> escribió:\n\n${message}`,
-      }),
-    });
-    if (!response.ok) console.error("Contact email failed:", response.status, await response.text());
-  } catch (error) {
-    console.error("Contact email failed:", error);
-  }
+  if (!to) return;
+  await sendEmail({ to, replyTo: email, subject: `Nuevo mensaje de contacto: ${name}`, text: `${name} <${email}> escribió:\n\n${message}` });
 }

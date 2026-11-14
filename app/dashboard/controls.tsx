@@ -3,27 +3,30 @@
 import { useState } from "react";
 import { useT } from "../i18n";
 
-export function Toggle({ label, defaultOn = false }: { label: string; defaultOn?: boolean }) {
+export function Toggle({ label, defaultOn = false, name }: { label: string; defaultOn?: boolean; name?: string }) {
   const [on, setOn] = useState(defaultOn);
   const t = useT();
 
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={t(label)}
-      onClick={() => setOn(!on)}
-      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
-        on ? "bg-[#4c2882]" : "bg-[#dfe2ea]"
-      }`}
-    >
-      <span
-        className={`size-4 rounded-full bg-white shadow-[0_1px_2px_rgba(15,26,46,0.2)] transition-transform duration-200 ${
-          on ? "translate-x-[1.125rem]" : "translate-x-0.5"
+    <>
+      {name && <input type="hidden" name={name} value={on ? "on" : ""} />}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label={t(label)}
+        onClick={() => setOn(!on)}
+        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
+          on ? "bg-[#4c2882]" : "bg-[#dfe2ea]"
         }`}
-      />
-    </button>
+      >
+        <span
+          className={`size-4 rounded-full bg-white shadow-[0_1px_2px_rgba(15,26,46,0.2)] transition-transform duration-200 ${
+            on ? "translate-x-[1.125rem]" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </>
   );
 }
 

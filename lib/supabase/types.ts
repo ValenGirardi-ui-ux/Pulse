@@ -5,9 +5,25 @@ export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; full_name: string | null; avatar_url: string | null; created_at: string };
+        Row: {
+          id: string;
+          full_name: string | null;
+          avatar_url: string | null;
+          auto_scans: boolean;
+          alerts_email: string | null;
+          alert_new_critical: boolean;
+          alert_site_down: boolean;
+          created_at: string;
+        };
         Insert: { id: string; full_name?: string | null; avatar_url?: string | null; created_at?: string };
-        Update: { full_name?: string | null; avatar_url?: string | null };
+        Update: {
+          full_name?: string | null;
+          avatar_url?: string | null;
+          auto_scans?: boolean;
+          alerts_email?: string | null;
+          alert_new_critical?: boolean;
+          alert_site_down?: boolean;
+        };
         Relationships: [];
       };
       sites: {
