@@ -7,6 +7,8 @@ export type CurrentUser = {
   id: string;
   email: string;
   name: string;
+  /** False for people who only sign in with Google. */
+  hasPassword: boolean;
 };
 
 /** The signed-in user, validated against Supabase. Redirects to /login when there's no session. */
@@ -20,9 +22,13 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const metadataName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
   const email = user.email ?? "";
 
+  const providers: unknown = user.app_metadata?.providers ?? [user.app_metadata?.provider];
+  const hasPassword = Array.isArray(providers) && providers.includes("email");
+
   return {
     id: user.id,
     email,
     name: profile?.full_name || metadataName || email.split("@")[0],
+    hasPassword,
   };
 });

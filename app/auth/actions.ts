@@ -1,7 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { siteOrigin } from "@/lib/site-origin";
 import { nameFromUrl, normalizeSiteUrl } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,13 +23,6 @@ export type AuthErrorCode =
 export type AuthState =
   | { error?: AuthErrorCode; checkEmail?: boolean; email?: string; name?: string; website?: string }
   | undefined;
-
-async function siteOrigin() {
-  const list = await headers();
-  const host = list.get("x-forwarded-host") ?? list.get("host");
-  const proto = list.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  return process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
-}
 
 function field(formData: FormData, name: string) {
   const value = formData.get(name);
