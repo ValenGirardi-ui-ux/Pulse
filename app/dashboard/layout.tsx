@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
+import { getCurrentSite } from "@/lib/sites";
 import { AccountMenu } from "./account-menu";
 import { AgentPanel, AgentProvider, AgentToggle } from "./agent";
 import { MobileNav } from "./mobile-nav";
@@ -10,6 +11,11 @@ import { ScanButton } from "./scan-dialog";
 async function CurrentAccountMenu() {
   const user = await getCurrentUser();
   return <AccountMenu user={{ name: user.name, email: user.email, photoUrl: user.photoUrl }} />;
+}
+
+async function CurrentScanButton() {
+  const site = await getCurrentSite();
+  return <ScanButton site={site?.url ?? null} />;
 }
 
 function SidebarContent() {
@@ -48,7 +54,9 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
 
               <AgentToggle />
 
-              <ScanButton />
+              <Suspense fallback={<ScanButton />}>
+                <CurrentScanButton />
+              </Suspense>
             </header>
 
             {children}

@@ -16,6 +16,38 @@ export type Database = {
         Update: { name?: string; url?: string };
         Relationships: [];
       };
+      scans: {
+        Row: {
+          id: string;
+          site_id: string;
+          user_id: string;
+          source: string;
+          score: number;
+          pages: number;
+          duration_ms: number;
+          response_ms: number | null;
+          status_code: number | null;
+          issues: unknown;
+          changes: unknown;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          user_id?: string;
+          source?: string;
+          score: number;
+          pages?: number;
+          duration_ms?: number;
+          response_ms?: number | null;
+          status_code?: number | null;
+          issues?: unknown;
+          changes?: unknown;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       contact_messages: {
         Row: { id: string; name: string; email: string; message: string; created_at: string };
         Insert: { id?: string; name: string; email: string; message: string; created_at?: string };
