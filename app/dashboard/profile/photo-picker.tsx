@@ -6,8 +6,27 @@ import { useT } from "../../i18n";
 import { secondaryButtonClass } from "../styles";
 import { removeAvatar, setAvatar } from "./photo-actions";
 
-const MAX_MB = 5;
-const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp" };
+const MAX_MB = 15;
+const TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const SIZE = 512;
+
+/** Crops the image to a centered square and turns it into a small 512×512 JPG, whatever format it came in. */
+async function toSquareJpeg(file: File): Promise<Blob> {
+  const image = await createImageBitmap(file);
+  const side = Math.min(image.width, image.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("canvas");
+  context.fillStyle = "#ffffff"; // transparent PNGs get a white background instead of black
+  context.fillRect(0, 0, SIZE, SIZE);
+  context.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, SIZE, SIZE);
+  image.close();
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob"))), "image/jpeg", 0.9),
+  );
+}
 
 export type PhotoUser = { id: string; initial: string; photoUrl: string | null; hasCustomPhoto: boolean };
 
@@ -26,8 +45,7 @@ export function PhotoPicker({ user }: { user: PhotoUser }) {
     event.target.value = "";
     if (!file) return;
 
-    const extension = TYPES[file.type];
-    if (!extension) {
+    if (!TYPES.includes(file.type)) {
       setError(t("Choose a JPG, PNG, GIF or WebP image.", "Elegí una imagen JPG, PNG, GIF o WebP."));
       return;
     }
@@ -41,12 +59,22 @@ export function PhotoPicker({ user }: { user: PhotoUser }) {
     setPreview(localUrl);
 
     startTransition(async () => {
-      const path = `${user.id}/${Date.now()}.${extension}`;
+      const path = `${user.id}/${Date.now()}.jpg`;
+      let jpeg: Blob;
+      try {
+        jpeg = await toSquareJpeg(file);
+      } catch {
+        setError(t("We couldn't read that image. Try another one.", "No pudimos leer esa imagen. Probá con otra."));
+        setPreview(null);
+        URL.revokeObjectURL(localUrl);
+        return;
+      }
       const { error: uploadError } = await createClient()
         .storage.from("avatars")
-        .upload(path, file, { contentType: file.type, cacheControl: "3600" });
-      const result = uploadError ? { error: true } : await setAvatar(path);
-      if (result.error) setError(failed);
+        .upload(path, jpeg, { contentType: "image/jpeg", cacheControl: "3600" });
+      if (uploadError) console.error("Avatar upload failed:", uploadError);
+      const result = uploadError ? { error: uploadError.message } : await setAvatar(path);
+      if (result.error) setError(`${failed} (${result.error})`);
       setPreview(null);
       URL.revokeObjectURL(localUrl);
     });
@@ -56,7 +84,7 @@ export function PhotoPicker({ user }: { user: PhotoUser }) {
     setError(null);
     startTransition(async () => {
       const result = await removeAvatar();
-      if (result.error) setError(failed);
+      if (result.error) setError(`${failed} (${result.error})`);
     });
   }
 
@@ -102,7 +130,7 @@ export function PhotoPicker({ user }: { user: PhotoUser }) {
         <input
           ref={inputRef}
           type="file"
-          accept={Object.keys(TYPES).join(",")}
+          accept={TYPES.join(",")}
           onChange={choose}
           className="hidden"
         />

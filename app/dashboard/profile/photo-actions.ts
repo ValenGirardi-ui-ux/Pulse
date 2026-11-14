@@ -14,14 +14,17 @@ async function removeOtherFiles(supabase: Awaited<ReturnType<typeof createClient
 }
 
 /** Called after the browser uploaded a photo to avatars/<user id>/...: makes it the profile photo. */
-export async function setAvatar(path: string): Promise<{ error?: boolean }> {
+export async function setAvatar(path: string): Promise<{ error?: string }> {
   const user = await getCurrentUser();
-  if (!new RegExp(`^${user.id}/[\\w.-]+$`).test(path)) return { error: true };
+  if (!new RegExp(`^${user.id}/[\\w.-]+$`).test(path)) return { error: "invalid path" };
 
   const supabase = await createClient();
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   const { error } = await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
-  if (error) return { error: true };
+  if (error) {
+    console.error("Avatar save failed:", error);
+    return { error: error.message };
+  }
 
   await removeOtherFiles(supabase, user.id, path);
   refresh();
@@ -29,11 +32,14 @@ export async function setAvatar(path: string): Promise<{ error?: boolean }> {
 }
 
 /** Removes the uploaded profile photo. */
-export async function removeAvatar(): Promise<{ error?: boolean }> {
+export async function removeAvatar(): Promise<{ error?: string }> {
   const user = await getCurrentUser();
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
-  if (error) return { error: true };
+  if (error) {
+    console.error("Avatar save failed:", error);
+    return { error: error.message };
+  }
 
   await removeOtherFiles(supabase, user.id);
   refresh();
