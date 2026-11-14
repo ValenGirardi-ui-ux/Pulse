@@ -25,6 +25,11 @@ async function CurrentSiteSwitcher() {
   );
 }
 
+async function CurrentBreadcrumb() {
+  const site = await getCurrentSite();
+  return <Breadcrumb site={site?.url ?? null} />;
+}
+
 async function CurrentScanButton() {
   const site = await getCurrentSite();
   return <ScanButton key={site?.id ?? "none"} site={site?.url ?? null} />;
@@ -66,7 +71,9 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
               <MobileNav>
                 <SidebarContent />
               </MobileNav>
-              <Breadcrumb />
+              <Suspense fallback={<Breadcrumb />}>
+                <CurrentBreadcrumb />
+              </Suspense>
 
               <AgentToggle />
 

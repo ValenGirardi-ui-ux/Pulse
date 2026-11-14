@@ -41,7 +41,8 @@ export function NavLinks() {
   );
 }
 
-export function Breadcrumb() {
+/** "site / page" at the top of the dashboard. `site` is the current site's address; undefined while it loads. */
+export function Breadcrumb({ site }: { site?: string | null }) {
   const pathname = usePathname();
   const t = useT();
   const link = links.find((item) => item.href === pathname);
@@ -52,12 +53,20 @@ export function Breadcrumb() {
       : pathname === "/dashboard/profile"
         ? t("Profile", "Perfil")
         : t("Overview", "Resumen");
-  const scope = pathname.startsWith("/dashboard/monitors") ? t("All sites", "Todos los sitios") : "tivvo.com";
+  const scope = pathname.startsWith("/dashboard/monitors")
+    ? t("All sites", "Todos los sitios")
+    : site === null
+      ? t("No site yet", "Sin sitio")
+      : site;
 
   return (
     <div className="flex min-w-0 items-center gap-2 text-sm md:shrink-0">
-      <span className="hidden text-[#8a91a3] md:inline">{scope}</span>
-      <span className="hidden text-[#c9cedd] md:inline">/</span>
+      {scope && (
+        <>
+          <span className="hidden max-w-[16rem] truncate text-[#8a91a3] md:inline">{scope}</span>
+          <span className="hidden text-[#c9cedd] md:inline">/</span>
+        </>
+      )}
       <span className="truncate font-medium">{current}</span>
     </div>
   );
