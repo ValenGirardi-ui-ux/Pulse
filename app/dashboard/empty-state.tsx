@@ -56,3 +56,18 @@ export function ScanEmptyState({ data }: { data: DashboardData }) {
     </div>
   );
 }
+
+/** Placeholder shown while a dashboard page loads its scans. */
+export function ScanDataSkeleton({ rows = 4 }: { rows?: number }) {
+  return (
+    <div aria-hidden="true" className="overflow-hidden rounded-2xl border border-black/[0.07] bg-white">
+      {Array.from({ length: rows }, (_, index) => (
+        <div key={index} className="flex items-center gap-3 border-b border-[#f1f2f6] px-4 py-4 last:border-b-0">
+          <span className="size-2 rounded-full bg-[#ececf1]" />
+          <span className="h-3 flex-1 animate-pulse rounded bg-[#f1f2f6]" />
+          <span className="h-3 w-12 animate-pulse rounded bg-[#f4f5f8]" />
+        </div>
+      ))}
+    </div>
+  );
+}

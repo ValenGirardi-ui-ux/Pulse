@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getDashboardData, issueTitle, openIssues, timeAgo } from "@/lib/scan/data";
 import { ruleOf } from "@/lib/scan/rules";
 import { T } from "../../i18n";
-import { ScanEmptyState } from "../empty-state";
+import { ScanDataSkeleton, ScanEmptyState } from "../empty-state";
 import { IconCheck } from "../icons";
 import { IssuesList } from "./issues-list";
 
@@ -10,7 +11,29 @@ export const metadata: Metadata = {
   title: "Issues · Pulse",
 };
 
-export default async function IssuesPage() {
+export default function IssuesPage() {
+  return (
+    <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">
+          <T en="Issues" es="Problemas" />
+        </h1>
+        <p className="mt-1 text-[13px] text-[#8a91a3]">
+          <T
+            en="What Pulse found on your site, sorted by what to fix first. Click one to see how to fix it."
+            es="Lo que Pulse encontró en tu sitio, ordenado por qué arreglar primero. Tocá uno para ver cómo arreglarlo."
+          />
+        </p>
+      </div>
+
+      <Suspense fallback={<ScanDataSkeleton />}>
+        <IssuesContent />
+      </Suspense>
+    </main>
+  );
+}
+
+async function IssuesContent() {
   const data = await getDashboardData();
   const issues = openIssues(data.scans);
   const resolved = data.scans
@@ -27,23 +50,7 @@ export default async function IssuesPage() {
     .slice(0, 5);
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">
-          <T en="Issues" es="Problemas" />
-        </h1>
-        <p className="mt-1 text-[13px] text-[#8a91a3]">
-          {data.scans.length === 0 ? (
-            <T en="What Pulse finds on your site, sorted by what to fix first." es="Lo que Pulse encuentra en tu sitio, ordenado por qué arreglar primero." />
-          ) : (
-            <T
-              en={`${issues.length} open, sorted by what to fix first. Click one to see how to fix it.`}
-              es={`${issues.length} abiertos, ordenados por qué arreglar primero. Tocá uno para ver cómo arreglarlo.`}
-            />
-          )}
-        </p>
-      </div>
-
+    <>
       {data.scans.length === 0 ? (
         <ScanEmptyState data={data} />
       ) : issues.length === 0 ? (
@@ -77,6 +84,6 @@ export default async function IssuesPage() {
           </ul>
         </section>
       )}
-    </main>
+    </>
   );
 }

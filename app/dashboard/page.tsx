@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { getDashboardData, issueTitle, openIssues, timeAgo, type Bilingual } from "@/lib/scan/data";
 import { ruleOf, scoreOf, type Category } from "@/lib/scan/rules";
 import { T } from "../i18n";
 import { AskPulseButton } from "./agent";
 import { severityDot } from "./data";
-import { ScanEmptyState } from "./empty-state";
+import { ScanDataSkeleton, ScanEmptyState } from "./empty-state";
 import { IconArrow, IconChevron, IconSpark } from "./icons";
 
 export const metadata: Metadata = {
@@ -35,7 +35,36 @@ function countText(count: number, critical: number): Bilingual {
   return { en: `${count} issue${count === 1 ? "" : "s"}`, es: `${count} problema${count === 1 ? "" : "s"}` };
 }
 
-export default async function OverviewPage() {
+export default function OverviewPage() {
+  return (
+    <Suspense fallback={<OverviewSkeleton />}>
+      <Overview />
+    </Suspense>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <main aria-busy="true" className="mx-auto w-full max-w-5xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="grid grid-cols-2 gap-y-6 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="lg:px-6 lg:first:pl-0">
+            <div className="h-3 w-20 animate-pulse rounded bg-[#f1f2f6]" />
+            <div className="mt-3 h-6 w-14 animate-pulse rounded bg-[#ececf1]" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="h-[68px] animate-pulse rounded-2xl bg-[#f6f7fb]" />
+        ))}
+      </div>
+      <ScanDataSkeleton rows={3} />
+    </main>
+  );
+}
+
+async function Overview() {
   const data = await getDashboardData();
   const [latest, previous] = data.scans;
 
