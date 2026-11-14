@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
+import { getCurrentUser } from "@/lib/auth";
 import { getCurrentSite, getSites } from "@/lib/sites";
+import { createClient } from "@/lib/supabase/server";
 import { T } from "../../i18n";
 import { LanguageSwitch } from "../../language-switch";
-import { Segmented, Toggle } from "../controls";
-import { Field, Section } from "../form-layout";
+import { Section } from "../form-layout";
 import { SiteForm } from "./site-form";
-import { inputClass as input, primaryButtonClass, secondaryButtonClass as secondaryButton } from "../styles";
 import { RemoveSite } from "./remove-site";
+import { PreferencesForm } from "./preferences-form";
 import { SwitchSiteButton } from "./switch-site-button";
 
 export const metadata: Metadata = {
   title: "Settings · Pulse",
 };
-
-const alerts = [
-  { label: "New critical issues", labelEs: "Nuevos problemas críticos", hint: "Sent right away.", hintEs: "Se envían en el momento.", on: true },
-  { label: "New warnings", labelEs: "Nuevas advertencias", hint: "Grouped once a day.", hintEs: "Agrupadas una vez por día.", on: true },
-  { label: "Weekly summary", labelEs: "Resumen semanal", hint: "Every Monday morning.", hintEs: "Todos los lunes a la mañana.", on: false },
-];
 
 export default function SettingsPage() {
   return (
@@ -58,52 +53,13 @@ export default function SettingsPage() {
           <YourSites />
         </Suspense>
 
-        <Section
-          title={<T en="Scanning" es="Escaneos" />}
-          description={<T en="When Pulse checks your site on its own." es="Cuándo Pulse revisa tu sitio por su cuenta." />}
-        >
-          <Row
-            label={<T en="Automatic scans" es="Escaneos automáticos" />}
-            hint={
-              <T
-                en="Pulse scans every page and tells you what changed."
-                es="Pulse escanea cada página y te avisa qué cambió."
-              />
-            }
-          >
-            <Toggle label="Automatic scans" defaultOn />
-          </Row>
-          <Row
-            label={<T en="Frequency" es="Frecuencia" />}
-            hint={<T en="Next scan in 11h 35m." es="Próximo escaneo en 11 h 35 min." />}
-          >
-            <Segmented label="Scan frequency" options={["6h", "12h", "24h"]} defaultValue="12h" />
-          </Row>
-        </Section>
-
-        <Section title={<T en="Alerts" es="Alertas" />} description={<T en="What Pulse emails you about." es="Sobre qué te avisa Pulse por email." />}>
-          <Field label={<T en="Send alerts to" es="Enviar alertas a" />} htmlFor="alert-email">
-            <input id="alert-email" type="email" placeholder="you@company.com" className={input} />
-          </Field>
-          {alerts.map((alert) => (
-            <Row key={alert.label} label={<T en={alert.label} es={alert.labelEs} />} hint={<T en={alert.hint} es={alert.hintEs} />}>
-              <Toggle label={alert.label} defaultOn={alert.on} />
-            </Row>
-          ))}
-        </Section>
+        <Suspense fallback={null}>
+          <CurrentPreferences />
+        </Suspense>
 
         <Suspense fallback={null}>
           <DangerZone />
         </Suspense>
-      </div>
-
-      <div className="sticky bottom-0 mt-2 flex justify-end gap-2 border-t border-black/[0.06] bg-white/90 py-4 backdrop-blur">
-        <button type="button" className={secondaryButton}>
-          <T en="Cancel" es="Cancelar" />
-        </button>
-        <button type="button" className={primaryButtonClass}>
-          <T en="Save changes" es="Guardar cambios" />
-        </button>
       </div>
     </main>
   );
@@ -118,6 +74,41 @@ function Row({ label, hint, children }: { label: ReactNode; hint: ReactNode; chi
       </div>
       {children}
     </div>
+  );
+}
+
+async function CurrentPreferences() {
+  const user = await getCurrentUser();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("auto_scans, alerts_email, alert_new_critical, alert_site_down")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    return (
+      <Section title={<T en="Scanning and alerts" es="Escaneos y alertas" />} description={<T en="Not set up yet." es="Todavía no configurado." />}>
+        <p className="text-[13px] text-[#8a91a3]">
+          <T
+            en="Run supabase/migrations/0006_preferences.sql in the Supabase SQL Editor, then reload this page."
+            es="Corré supabase/migrations/0006_preferences.sql en el SQL Editor de Supabase y recargá esta página."
+          />
+        </p>
+      </Section>
+    );
+  }
+
+  return (
+    <PreferencesForm
+      accountEmail={user.email}
+      preferences={{
+        autoScans: data?.auto_scans ?? true,
+        alertsEmail: data?.alerts_email ?? "",
+        alertNewCritical: data?.alert_new_critical ?? true,
+        alertSiteDown: data?.alert_site_down ?? true,
+      }}
+    />
   );
 }
 
