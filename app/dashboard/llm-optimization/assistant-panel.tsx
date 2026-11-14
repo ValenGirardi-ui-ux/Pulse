@@ -115,8 +115,8 @@ export function AssistantPanel({
             <div className="rounded-2xl rounded-tl-md bg-[#f4f5f8] px-3.5 py-2.5 text-[13px] leading-5 text-[#3c4558]">
               {greeting ??
                 t(
-                  "Hi! I can explain any finding, prioritize the fixes and write the code or copy you need so LLMs can read and cite your site.",
-                  "¡Hola! Puedo explicarte cada hallazgo, priorizar los arreglos y escribir el código o los textos que necesitás para que las IA puedan leer y citar tu sitio.",
+                  "Hi! I can explain your findings, tell you what to fix first and give you ready-to-paste code like llms.txt or JSON-LD.",
+                  "¡Hola! Puedo explicarte los hallazgos, decirte qué arreglar primero y darte código listo para pegar, como llms.txt o JSON-LD.",
                 )}
             </div>
             <div>

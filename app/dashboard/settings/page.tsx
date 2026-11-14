@@ -92,33 +92,6 @@ export default function SettingsPage() {
           ))}
         </Section>
 
-        <Section
-          title={<T en="Ask Pulse" es="Preguntale a Pulse" />}
-          description={
-            <T
-              en="AI credits are used each time you ask a question."
-              es="Se usan créditos de IA cada vez que hacés una pregunta."
-            />
-          }
-        >
-          <div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-[13px] font-medium">
-                120{" "}
-                <span className="font-normal text-[#8a91a3]">
-                  <T en="of 200 credits left" es="de 200 créditos disponibles" />
-                </span>
-              </p>
-              <span className="text-xs text-[#8a91a3]">
-                <T en="Resets Nov 1" es="Se renuevan el 1 nov" />
-              </span>
-            </div>
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#f1f2f6]">
-              <div className="h-full w-[60%] rounded-full bg-[#4c2882]" />
-            </div>
-          </div>
-        </Section>
-
         <Suspense fallback={null}>
           <DangerZone />
         </Suspense>
