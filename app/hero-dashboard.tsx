@@ -28,17 +28,6 @@ export function HeroDashboard() {
       aria-hidden="true"
       className="relative origin-center overflow-hidden rounded-2xl border border-black/[0.07] bg-white text-[#0f1a2e] shadow-[0_1px_2px_rgba(15,26,46,0.06),0_24px_60px_rgba(15,26,46,0.12)] transition-transform duration-500 ease-out hover:scale-[1.03]"
     >
-      <div className="flex items-center gap-3 border-b border-[#f1f2f6] bg-[#fafafb] px-4 py-2.5">
-        <span className="flex gap-1.5">
-          <span className="size-2 rounded-full bg-[#ff5f57]" />
-          <span className="size-2 rounded-full bg-[#febc2e]" />
-          <span className="size-2 rounded-full bg-[#28c840]" />
-        </span>
-        <span className="flex-1 truncate rounded-md bg-white px-2.5 py-1 text-center font-mono text-[10px] text-[#8a91a3] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]">
-          pulse.app/dashboard
-        </span>
-      </div>
-
       <div className="space-y-4 p-4 lg:p-5">
         <div className="grid grid-cols-4 divide-x divide-[#ececf1]">
           {stats.map((stat, index) => (
