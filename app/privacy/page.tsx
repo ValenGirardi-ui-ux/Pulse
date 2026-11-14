@@ -58,8 +58,8 @@ const sections: LegalSection[] = [
     title: { en: "Your choices", es: "Tus derechos" },
     body: [
       {
-        en: "You can change your name and your sites from the dashboard at any time. To get a copy of your data or delete your account and everything in it, write to us and we'll do it.",
-        es: "Podés cambiar tu nombre y tus sitios desde el dashboard cuando quieras. Si querés una copia de tus datos o borrar tu cuenta con todo lo que tiene, escribinos y lo hacemos.",
+        en: "You can change your name and your sites from the dashboard at any time, and delete your account with everything in it from your Profile. To get a copy of your data, write to us and we'll send it.",
+        es: "Podés cambiar tu nombre y tus sitios desde el dashboard cuando quieras, y borrar tu cuenta con todo lo que tiene desde tu Perfil. Si querés una copia de tus datos, escribinos y te la mandamos.",
       },
       {
         en: "If you signed in with Google, you can also remove Pulse's access from your Google Account settings.",

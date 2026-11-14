@@ -59,8 +59,8 @@ const sections: LegalSection[] = [
     title: { en: "Ending your account", es: "Fin de la cuenta" },
     body: [
       {
-        en: "You can stop using Pulse and ask us to delete your account at any time. We may suspend accounts that break these terms.",
-        es: "Podés dejar de usar Pulse y pedirnos que borremos tu cuenta cuando quieras. Podemos suspender cuentas que no cumplan estos términos.",
+        en: "You can stop using Pulse and delete your account from your Profile at any time. We may suspend accounts that break these terms.",
+        es: "Podés dejar de usar Pulse y borrar tu cuenta desde tu Perfil cuando quieras. Podemos suspender cuentas que no cumplan estos términos.",
       },
     ],
   },

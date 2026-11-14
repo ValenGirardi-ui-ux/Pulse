@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth";
 import { T } from "../../i18n";
 import { Section } from "../form-layout";
+import { DeleteAccount } from "./delete-account";
 import { PhotoPicker } from "./photo-picker";
 import { ProfileForm } from "./profile-form";
 
@@ -14,6 +15,31 @@ async function CurrentPhotoPicker() {
   const user = await getCurrentUser();
   const initial = (user.name || user.email || "?").charAt(0).toUpperCase();
   return <PhotoPicker user={{ id: user.id, initial, photoUrl: user.photoUrl, hasCustomPhoto: user.hasCustomPhoto }} />;
+}
+
+async function DangerZone() {
+  const user = await getCurrentUser();
+  return (
+    <Section
+      title={<T en="Danger zone" es="Zona de peligro" />}
+      description={<T en="This can't be undone." es="No se puede deshacer." />}
+    >
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 p-4">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium">
+            <T en="Delete account" es="Borrar cuenta" />
+          </p>
+          <p className="mt-0.5 text-xs text-[#8a91a3]">
+            <T
+              en="Deletes your account, your sites, their scans and your photo."
+              es="Borra tu cuenta, tus sitios, sus escaneos y tu foto."
+            />
+          </p>
+        </div>
+        <DeleteAccount email={user.email} />
+      </div>
+    </Section>
+  );
 }
 
 async function CurrentProfileForm() {
@@ -54,6 +80,10 @@ export default function ProfilePage() {
 
         <Suspense fallback={<ProfileFormSkeleton />}>
           <CurrentProfileForm />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <DangerZone />
         </Suspense>
       </div>
     </main>
