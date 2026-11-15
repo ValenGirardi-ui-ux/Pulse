@@ -46,7 +46,11 @@ export async function proxy(request: NextRequest) {
   }
 
   if (signedIn && (pathname === "/login" || pathname === "/signup")) {
-    return redirectKeepingCookies(request, response, "/dashboard");
+    // getClaims only checks the token signature. Confirm the account still exists before sending them to the
+    // dashboard: a deleted or revoked session would otherwise bounce between /login and /dashboard forever.
+    const { data: current } = await supabase.auth.getUser();
+    if (current.user) return redirectKeepingCookies(request, response, "/dashboard");
+    await supabase.auth.signOut({ scope: "local" });
   }
 
   return response;
