@@ -12,7 +12,7 @@ const EXTRA_PAGES = 4;
 
 const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-Web", "anthropic-ai", "PerplexityBot", "Google-Extended", "CCBot"];
 const AREAS: Area[] = ["Crawl access", "HTML structure", "Content", "Metadata", "Structured data", "JavaScript"];
-const penalty: Record<Severity, number> = { Critical: 30, Warning: 15, Minor: 6 };
+const penalty: Record<Severity, number> = { Critical: 30, High: 20, Warning: 15, Minor: 6 };
 
 type Page = { path: string; html: string; clean: string };
 type Passed = Report["passed"][number];
@@ -223,10 +223,10 @@ export async function analyzeForLlms(url: URL): Promise<Report> {
       severity: "Minor",
       area: "Crawl access",
       effort: "Low",
-      title: { en: "No llms.txt file", es: "Falta el archivo llms.txt" },
+      title: { en: "No llms.txt file (experimental)", es: "Falta el archivo llms.txt (experimental)" },
       why: {
-        en: "llms.txt gives language models a short, curated map of your most important pages and what's in them.",
-        es: "llms.txt les da a los modelos de lenguaje un mapa corto y curado de tus páginas más importantes y de lo que contienen.",
+        en: "llms.txt is an emerging proposal to give language models a curated map of your key pages. It isn't a standard yet and no AI engine requires it.",
+        es: "llms.txt es una propuesta nueva para darles a los modelos de lenguaje un mapa curado de tus páginas clave. Todavía no es un estándar y ningún motor de IA lo exige.",
       },
       found: { en: `https://${host}/llms.txt wasn't found.`, es: `No se encontró https://${host}/llms.txt.` },
       pages: ["/llms.txt"],
@@ -558,6 +558,89 @@ export async function analyzeForLlms(url: URL): Promise<Report> {
         { en: "Show the author's name, linked to their page.", es: "Mostrá el nombre del autor con un link a su página." },
       ],
     });
+  }
+
+  // ---------- Entities, trust and answers (GEO) ----------
+  const ORG_TYPES = /"@type"\s*:\s*\[?\s*"(Organization|Corporation|LocalBusiness|OnlineStore|Store|Restaurant|ProfessionalService|MedicalBusiness|EducationalOrganization|NGO|Person)"/;
+  if (withJsonLd.length > 0 && !ORG_TYPES.test(homePage.html)) {
+    checks.push({
+      id: "no-entity",
+      severity: "Warning",
+      area: "Structured data",
+      effort: "Low",
+      title: { en: "Your business isn't described as an entity", es: "Tu negocio no está descripto como entidad" },
+      why: {
+        en: "Without Organization or LocalBusiness data, AI has to guess who you are, what you do and where you are.",
+        es: "Sin datos de Organization o LocalBusiness, la IA tiene que adivinar quién sos, qué hacés y dónde estás.",
+      },
+      found: { en: "The home page has JSON-LD, but no Organization or LocalBusiness.", es: "La página principal tiene JSON-LD, pero no Organization ni LocalBusiness." },
+      pages: [homePage.path],
+      fix: [{ en: "Add an Organization (or LocalBusiness) block with name, URL, logo, contact and sameAs links to your profiles.", es: "Agregá un bloque Organization (o LocalBusiness) con nombre, URL, logo, contacto y links sameAs a tus perfiles." }],
+    });
+  } else if (withJsonLd.length > 0) {
+    pass("Structured data", "Business described as an entity", "El negocio está descripto como entidad");
+  }
+
+  const allHtml = pages.map((page) => page.html).join("\n");
+  const hrefs = pages.flatMap((page) => tags(page.clean, "a").map((a) => (a.href ?? "").toLowerCase()));
+  const hasContact = /href\s*=\s*["'](tel:|mailto:)/i.test(allHtml) || /<address\b/i.test(allHtml) || /"(telephone|email)"\s*:/.test(allHtml) || hrefs.some((h) => /contact|contacto/.test(h));
+  if (!hasContact) {
+    checks.push({
+      id: "no-contact",
+      severity: "Warning",
+      area: "Content",
+      effort: "Low",
+      title: { en: "No contact information found", es: "No se encontró información de contacto" },
+      why: {
+        en: "Visible contact details are a basic trust signal: AI assistants prefer sources that clearly say who is behind them.",
+        es: "Los datos de contacto visibles son una señal básica de confianza: los asistentes de IA prefieren fuentes que dicen claramente quién está detrás.",
+      },
+      found: { en: `No phone, email, address or contact page in the ${pages.length} pages analyzed.`, es: `No hay teléfono, email, dirección ni página de contacto en las ${pages.length} páginas analizadas.` },
+      pages: [homePage.path],
+      fix: [{ en: "Add a contact page and show your email, phone or address with tel: and mailto: links.", es: "Agregá una página de contacto y mostrá tu email, teléfono o dirección con links tel: y mailto:." }],
+    });
+  } else {
+    pass("Content", "Contact information found", "Se encontró información de contacto");
+  }
+
+  if (!hrefs.some((h) => /(about|nosotros|quienes-somos|sobre-nosotros|acerca|empresa|company|team|equipo)/.test(h))) {
+    checks.push({
+      id: "no-about",
+      severity: "Minor",
+      area: "Content",
+      effort: "Low",
+      title: { en: "No \"About us\" page found", es: "No se encontró una página \"Nosotros\"" },
+      why: {
+        en: "Explaining who is behind the site helps AI describe your business correctly and trust it.",
+        es: "Explicar quién está detrás del sitio ayuda a que la IA describa bien tu negocio y confíe en él.",
+      },
+      found: { en: "No link to an About page was found.", es: "No se encontró un link a una página Nosotros." },
+      pages: [homePage.path],
+      fix: [{ en: "Create an About page (who you are, since when, where) and link it from the menu or footer.", es: "Creá una página Nosotros (quiénes son, desde cuándo, dónde) y enlazala desde el menú o el pie." }],
+    });
+  }
+
+  const hasFaq = /"FAQPage"/.test(allHtml) || (allHtml.match(/<details\b/gi) ?? []).length >= 2 || /(preguntas frecuentes|frequently asked|>\s*faq\s*<)/i.test(allHtml) || hrefs.some((h) => /(faq|preguntas)/.test(h));
+  if (!hasFaq) {
+    checks.push({
+      id: "no-faq",
+      severity: "Minor",
+      area: "Content",
+      effort: "Medium",
+      title: { en: "No frequently asked questions", es: "No hay preguntas frecuentes" },
+      why: {
+        en: "Short, direct question-and-answer content is what AI assistants quote most in conversational answers.",
+        es: "El contenido de pregunta y respuesta corta y directa es lo que más citan los asistentes de IA en sus respuestas.",
+      },
+      found: { en: "No FAQ section, FAQPage data or question list was found.", es: "No se encontró una sección de preguntas frecuentes, datos FAQPage ni una lista de preguntas." },
+      pages: [homePage.path],
+      fix: [
+        { en: "Add a FAQ with the real questions your customers ask, each with a one or two sentence answer.", es: "Agregá preguntas frecuentes con las preguntas reales de tus clientes, cada una con una respuesta de una o dos oraciones." },
+        { en: "Mark it up with FAQPage JSON-LD.", es: "Marcala con JSON-LD FAQPage." },
+      ],
+    });
+  } else {
+    pass("Content", "Frequently asked questions found", "Se encontraron preguntas frecuentes");
   }
 
   // ---------- Scores ----------

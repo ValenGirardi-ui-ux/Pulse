@@ -1,9 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { runAudit, type AuditOptions } from "./audit";
 import { issueKey, parseIssues, type StoredChange } from "./data";
-import { scoreOf, type FoundIssue } from "./rules";
-import { BlockedAddressError, scanSite } from "./scanner";
+import { overallScore, type FoundIssue } from "./rules";
+import { BlockedAddressError } from "./scanner";
 
 export type ScanSaved =
   | {
@@ -13,13 +14,14 @@ export type ScanSaved =
       issues: FoundIssue[];
       changes: StoredChange[];
       statusCode: number | null;
+      pages: number;
     }
   | { ok: false; error: "too_soon" | "blocked" | "setup" | "unknown" };
 
 type SiteToScan = { id: string; url: string; user_id: string };
 
 /**
- * Scans a site, compares it with its previous scan and saves the result. Used by "Scan now" (with the
+ * Audits a site, compares it with its previous scan and saves the result. Used by "Scan now" (with the
  * user's client) and by the daily automatic scan (with the admin client).
  */
 export async function scanAndSave(
@@ -27,6 +29,7 @@ export async function scanAndSave(
   site: SiteToScan,
   source: "manual" | "scheduled",
   minSecondsBetweenScans: number,
+  options: AuditOptions = {},
 ): Promise<ScanSaved> {
   const { data: previousRows, error: previousError } = await supabase
     .from("scans")
@@ -47,14 +50,14 @@ export async function scanAndSave(
   const started = Date.now();
   let outcome;
   try {
-    outcome = await scanSite(site.url);
+    outcome = await runAudit(site.url, options);
   } catch (error) {
     if (error instanceof BlockedAddressError) return { ok: false, error: "blocked" };
-    console.error("Scan failed:", error);
+    console.error("Audit failed:", error);
     return { ok: false, error: "unknown" };
   }
 
-  const score = scoreOf(outcome.issues);
+  const score = outcome.pages > 0 ? overallScore(outcome.issues, outcome.pages) : 0;
   const before = previous ? parseIssues(previous.issues) : [];
   const nowKeys = new Set(outcome.issues.map(issueKey));
   const beforeKeys = new Set(before.map(issueKey));
@@ -65,7 +68,7 @@ export async function scanAndSave(
       ]
     : [];
 
-  const { error } = await supabase.from("scans").insert({
+  const row = {
     site_id: site.id,
     user_id: site.user_id,
     source,
@@ -76,7 +79,10 @@ export async function scanAndSave(
     status_code: outcome.statusCode,
     issues: outcome.issues,
     changes,
-  });
+  };
+  let { error } = await supabase.from("scans").insert({ ...row, report: outcome.report });
+  // Before migration 0007 there's no report column: save the scan without it.
+  if (error && (error.code === "PGRST204" || error.code === "42703")) ({ error } = await supabase.from("scans").insert(row));
   if (error) {
     console.error("Couldn't save scan:", error);
     return { ok: false, error: "unknown" };
@@ -89,5 +95,6 @@ export async function scanAndSave(
     issues: outcome.issues,
     changes,
     statusCode: outcome.statusCode,
+    pages: outcome.pages,
   };
 }

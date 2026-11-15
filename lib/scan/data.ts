@@ -3,7 +3,8 @@ import { cache } from "react";
 import { getCurrentSite } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
 import type { Site } from "@/lib/supabase/types";
-import { describe, isRuleId, ruleOf, severityOrder, type Category, type FoundIssue, type Severity } from "./rules";
+import type { AuditReport } from "./audit";
+import { describe, effortOrder, isRuleId, ruleOf, severityOrder, type Category, type Effort, type FoundIssue, type Severity } from "./rules";
 
 export type Bilingual = { en: string; es: string };
 export type ChangeKind = "new" | "fixed";
@@ -20,6 +21,8 @@ export type Scan = {
   statusCode: number | null;
   issues: FoundIssue[];
   changes: StoredChange[];
+  /** The full audit report (version 2 scans); null for older scans. */
+  report: AuditReport | null;
 };
 
 export type DashboardData = {
@@ -77,9 +80,16 @@ export const getDashboardData = cache(async (): Promise<DashboardData> => {
       statusCode: row.status_code,
       issues: parseIssues(row.issues),
       changes: parseChanges(row.changes),
+      report: parseReport((row as { report?: unknown }).report),
     })),
   };
 });
+
+function parseReport(value: unknown): AuditReport | null {
+  if (typeof value !== "object" || value === null) return null;
+  const report = value as Partial<AuditReport>;
+  return report.version === 2 && typeof report.categories === "object" ? (report as AuditReport) : null;
+}
 
 export function issueKey(issue: FoundIssue) {
   return `${issue.rule}:${issue.page}`;
@@ -90,6 +100,10 @@ export type IssueView = {
   severity: Severity;
   category: Category;
   page: string;
+  effort: Effort;
+  count: number | null;
+  pages: string[];
+  evidence: string | null;
   en: ReturnType<typeof describe>;
   es: ReturnType<typeof describe>;
   found: Bilingual;
@@ -112,12 +126,17 @@ export function openIssues(scans: Scan[], now = Date.now()): IssueView[] {
         severity: rule.severity,
         category: rule.category,
         page: issue.page,
+        effort: rule.effort,
+        count: issue.count ?? null,
+        pages: issue.pages ?? [issue.page],
+        evidence: issue.evidence ?? null,
         en: describe(issue, "en"),
         es: describe(issue, "es"),
         found: timeAgo(foundAt, now),
       };
     })
-    .sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+    // Worst first; for the same severity, the quickest fixes first.
+    .sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity] || effortOrder[a.effort] - effortOrder[b.effort]);
 }
 
 export function issueTitle(issue: FoundIssue): Bilingual {

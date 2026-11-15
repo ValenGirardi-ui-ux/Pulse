@@ -45,6 +45,7 @@ export type Database = {
           status_code: number | null;
           issues: unknown;
           changes: unknown;
+          report: unknown;
           created_at: string;
         };
         Insert: {
@@ -59,6 +60,7 @@ export type Database = {
           status_code?: number | null;
           issues?: unknown;
           changes?: unknown;
+          report?: unknown;
           created_at?: string;
         };
         Update: Record<string, never>;

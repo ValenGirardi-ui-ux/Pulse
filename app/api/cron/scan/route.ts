@@ -6,8 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // The daily automatic scan. Vercel Cron calls it (see vercel.json) with "Authorization: Bearer <CRON_SECRET>".
 export const maxDuration = 300;
 
-const MAX_SITES_PER_RUN = 40;
-const TIME_BUDGET_MS = 240_000;
+const MAX_SITES = 500;
+const TIME_BUDGET_MS = 200_000;
+const AUDIT_OPTIONS = { maxPages: 20, budgetMs: 35_000 };
 const SKIP_IF_SCANNED_WITHIN_SECONDS = 60 * 60;
 const DOWN_RULES = new Set(["site_down", "http_error"]);
 
@@ -32,8 +33,19 @@ export async function GET(request: Request) {
     .select("id, url, name, user_id")
     .in("user_id", profiles.map((profile) => profile.id))
     .order("created_at", { ascending: true })
-    .limit(MAX_SITES_PER_RUN);
+    .limit(MAX_SITES);
   if (sitesError) return Response.json({ error: sitesError.message }, { status: 500 });
+
+  // Sites scanned least recently go first, so every site gets its turn even when there are many.
+  const { data: recent } = await admin
+    .from("scans")
+    .select("site_id, created_at")
+    .in("site_id", sites.map((site) => site.id))
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  const lastScan = new Map<string, number>();
+  for (const row of recent ?? []) if (!lastScan.has(row.site_id)) lastScan.set(row.site_id, Date.parse(row.created_at));
+  sites.sort((a, b) => (lastScan.get(a.id) ?? 0) - (lastScan.get(b.id) ?? 0));
 
   const started = Date.now();
   const alerts = new Map<string, string[]>();
@@ -43,7 +55,7 @@ export async function GET(request: Request) {
   for (let i = 0; i < sites.length && Date.now() - started < TIME_BUDGET_MS; i += 3) {
     await Promise.all(
       sites.slice(i, i + 3).map(async (site) => {
-        const result = await scanAndSave(admin, site, "scheduled", SKIP_IF_SCANNED_WITHIN_SECONDS);
+        const result = await scanAndSave(admin, site, "scheduled", SKIP_IF_SCANNED_WITHIN_SECONDS, AUDIT_OPTIONS);
         if (!result.ok) return;
         scanned++;
 

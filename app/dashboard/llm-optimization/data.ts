@@ -47,7 +47,7 @@ export const analysisSteps = [
   "Writing recommendations",
 ];
 
-export const severityOrder: Severity[] = ["Critical", "Warning", "Minor"];
+export const severityOrder: Severity[] = ["Critical", "High", "Warning", "Minor"];
 
 export function normalizeUrl(input: string) {
   const value = input.trim();

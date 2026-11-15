@@ -39,9 +39,10 @@ const STOP_WORDS = new Set(
 
 function severityLabel(severity: Severity, lang: Lang) {
   const labels: Record<Severity, [string, string]> = {
-    Critical: ["critical", "crítico"],
-    Warning: ["warning", "advertencia"],
-    Minor: ["minor", "menor"],
+    Critical: ["critical", "crítica"],
+    High: ["high", "alta"],
+    Warning: ["medium", "media"],
+    Minor: ["low", "baja"],
   };
   return labels[severity][lang === "es" ? 1 : 0];
 }

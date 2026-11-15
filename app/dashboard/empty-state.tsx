@@ -171,8 +171,8 @@ export async function ScanEmptyState({ data }: { data: DashboardData }) {
           <Step n="02" state={site ? "current" : "next"} title={<T en="Run the first scan" es="Hacé el primer escaneo" />}>
             <p className="text-[13px] leading-5">
               <T
-                en="We check about 25 things: speed, SEO, broken links, security and more. A few seconds."
-                es="Revisamos unas 25 cosas: velocidad, SEO, links rotos, seguridad y más. Unos segundos."
+                en="We crawl up to 30 pages and run more than 80 checks: SEO, AI readiness, speed, broken links, security and more. About a minute."
+                es="Recorremos hasta 30 páginas y hacemos más de 80 controles: SEO, preparación para IA, velocidad, links rotos, seguridad y más. Alrededor de un minuto."
               />
             </p>
             {site && (

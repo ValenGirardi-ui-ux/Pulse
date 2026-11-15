@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
+import type { NotEvaluatedKey, PerformanceData } from "@/lib/scan/audit";
 import { getDashboardData, issueTitle, openIssues, timeAgo, type Bilingual } from "@/lib/scan/data";
-import { ruleOf, scoreOf, type Category } from "@/lib/scan/rules";
+import { categories as auditCategories, categoryLabels, categoryScore, ruleOf } from "@/lib/scan/rules";
 import { T } from "../i18n";
 import { AskPulseButton } from "./agent";
 import { severityDot } from "./data";
@@ -16,7 +17,6 @@ export const metadata: Metadata = {
 type Tone = "good" | "warn" | "bad";
 
 const dot = { good: "bg-emerald-500", warn: "bg-amber-500", bad: "bg-red-500" } as const;
-const categoryNames: Category[] = ["Development", "SEO", "Marketing", "Performance"];
 
 function toneFor(score: number): Tone {
   if (score >= 85) return "good";
@@ -82,10 +82,12 @@ async function Overview() {
   const online = latest.statusCode !== null && latest.statusCode < 400;
   const lastScan = timeAgo(latest.createdAt);
 
-  const categories = categoryNames.map((name) => {
+  const categories = auditCategories.map((name) => {
     const inCategory = latest.issues.filter((issue) => ruleOf(issue).category === name);
     const criticalHere = inCategory.filter((issue) => ruleOf(issue).severity === "Critical").length;
-    return { name, score: scoreOf(latest.issues, name), summary: countText(inCategory.length, criticalHere) };
+    const stored = latest.report?.categories[name];
+    const score = stored !== undefined ? stored : categoryScore(latest.issues, name, Math.max(1, latest.pages));
+    return { name, score, summary: countText(inCategory.length, criticalHere) };
   });
 
   const activity = data.scans.slice(0, 3).flatMap((scan, index) => {
@@ -175,18 +177,38 @@ async function Overview() {
             className="group rounded-2xl border border-black/[0.07] bg-white px-4 py-3.5 shadow-[0_8px_24px_rgba(15,26,46,0.08)] transition-[border-color,box-shadow] hover:border-[#4c2882]/20 hover:shadow-[0_12px_32px_rgba(15,26,46,0.12)]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-medium">
-                <T en={category.name} />
+              <span className="truncate text-[13px] font-medium">
+                <T en={categoryLabels[category.name].en} es={categoryLabels[category.name].es} />
               </span>
-              <span className="font-mono text-lg font-medium tracking-tight">{category.score}</span>
+              <span className="font-mono text-lg font-medium tracking-tight">{category.score ?? "—"}</span>
             </div>
             <p className="mt-1 flex items-center gap-2 text-xs text-[#8a91a3]">
-              <span className={`size-1.5 rounded-full ${dot[toneFor(category.score)]}`} />
-              <T en={category.summary.en} es={category.summary.es} />
+              <span className={`size-1.5 rounded-full ${category.score === null ? "bg-[#c9cedd]" : dot[toneFor(category.score)]}`} />
+              {category.score === null ? <T en="Not evaluated" es="No evaluado" /> : <T en={category.summary.en} es={category.summary.es} />}
             </p>
           </Link>
         ))}
+        <div className="rounded-2xl border border-dashed border-[#d9dce6] px-4 py-3.5">
+          <div className="flex items-center justify-between">
+            <span className="truncate text-[13px] font-medium text-[#5b6478]">
+              <T en={categoryLabels.Authority.en} es={categoryLabels.Authority.es} />
+            </span>
+            <span className="font-mono text-lg text-[#c9cedd]">—</span>
+          </div>
+          <p className="mt-1 text-xs text-[#8a91a3]">
+            <T en="Not evaluated · needs paid APIs" es="No evaluado · requiere APIs pagas" />
+          </p>
+        </div>
       </section>
+
+      {latest.report && (
+        <p className="-mt-6 text-xs text-[#8a91a3]">
+          <T
+            en={`Based on ${latest.report.pagesCrawled} pages crawled${latest.report.truncated ? " (crawl limit reached)" : ""}. The overall score is a weighted average of the areas.`}
+            es={`Basado en ${latest.report.pagesCrawled} páginas recorridas${latest.report.truncated ? " (se llegó al límite del recorrido)" : ""}. El puntaje general es un promedio ponderado de las áreas.`}
+          />
+        </p>
+      )}
 
       <section className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
         <div>
@@ -260,7 +282,85 @@ async function Overview() {
           </ol>
         </div>
       </section>
+
+      {latest.report?.performance && <CoreWebVitals data={latest.report.performance} />}
+
+      {latest.report && latest.report.notEvaluated.length > 0 && <NotEvaluated keys={latest.report.notEvaluated} />}
     </main>
+  );
+}
+
+function metric(value: number | null, format: (v: number) => string, good: number, poor: number) {
+  if (value === null) return { text: "—", tone: "bg-[#c9cedd]" };
+  return { text: format(value), tone: value <= good ? "bg-emerald-500" : value <= poor ? "bg-amber-500" : "bg-red-500" };
+}
+
+function CoreWebVitals({ data }: { data: PerformanceData }) {
+  const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)} s` : `${Math.round(v)} ms`);
+  const rows = [
+    { label: "LCP", hint: { en: "Largest Contentful Paint", es: "Carga del contenido principal" }, ...metric(data.fieldLcpMs ?? data.lcpMs, ms, 2500, 4000) },
+    { label: "INP", hint: { en: "Interaction to Next Paint (real users)", es: "Respuesta a interacciones (usuarios reales)" }, ...metric(data.fieldInpMs, ms, 200, 500) },
+    { label: "CLS", hint: { en: "Cumulative Layout Shift", es: "Movimiento del diseño" }, ...metric(data.fieldCls ?? data.cls, (v) => v.toFixed(2), 0.1, 0.25) },
+    { label: "FCP", hint: { en: "First Contentful Paint", es: "Primer contenido visible" }, ...metric(data.fcpMs, ms, 1800, 3000) },
+    { label: "TBT", hint: { en: "Total Blocking Time", es: "Tiempo de bloqueo total" }, ...metric(data.tbtMs, ms, 200, 600) },
+    { label: "SI", hint: { en: "Speed Index", es: "Índice de velocidad" }, ...metric(data.speedIndexMs, ms, 3400, 5800) },
+    { label: "TTFB", hint: { en: "Server response time", es: "Tiempo de respuesta del servidor" }, ...metric(data.ttfbMs, ms, 800, 1800) },
+  ];
+  return (
+    <section>
+      <SectionTitle title={<T en="Core Web Vitals (mobile)" es="Core Web Vitals (mobile)" />} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {rows.map((row) => (
+          <div key={row.label} className="rounded-xl border border-black/[0.07] px-3.5 py-3">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium text-[#5b6478]">
+              <span className={`size-1.5 rounded-full ${row.tone}`} />
+              {row.label}
+            </p>
+            <p className="mt-1 font-mono text-[15px] font-medium">{row.text}</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-[#9aa1b2]">
+              <T en={row.hint.en} es={row.hint.es} />
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-[#8a91a3]">
+        <T
+          en={`Measured with Google PageSpeed Insights${data.score !== null ? ` (performance ${data.score}/100)` : ""}. INP and field values come from real Chrome users when Google has enough data.`}
+          es={`Medido con Google PageSpeed Insights${data.score !== null ? ` (rendimiento ${data.score}/100)` : ""}. INP y los valores de campo vienen de usuarios reales de Chrome cuando Google tiene datos suficientes.`}
+        />
+      </p>
+    </section>
+  );
+}
+
+const notEvaluatedText: Record<NotEvaluatedKey, { en: string; es: string }> = {
+  authority: { en: "Backlinks, authority and competitors: need paid data providers (Ahrefs, Semrush…).", es: "Backlinks, autoridad y competencia: necesitan proveedores de datos pagos (Ahrefs, Semrush…)." },
+  search_console: { en: "Search Console, Analytics, Bing and Google Business Profile: need connecting your accounts.", es: "Search Console, Analytics, Bing y Google Business Profile: necesitan conectar tus cuentas." },
+  ai_visibility: { en: "Brand mentions and citations in ChatGPT, Gemini or Perplexity: need AI APIs.", es: "Menciones y citas de tu marca en ChatGPT, Gemini o Perplexity: necesitan APIs de IA." },
+  semantic: { en: "Keywords, search intent, cannibalization and writing quality: need AI-assisted analysis.", es: "Keywords, intención de búsqueda, canibalización y calidad de redacción: necesitan análisis con IA." },
+  rendering: { en: "Rendered DOM vs. initial HTML and hydration: need a real browser. Pulse checks the raw HTML.", es: "DOM renderizado vs. HTML inicial e hidratación: necesitan un navegador real. Pulse revisa el HTML inicial." },
+  lab_performance: { en: "Core Web Vitals and Lighthouse accessibility: PageSpeed Insights didn't answer this time.", es: "Core Web Vitals y accesibilidad de Lighthouse: PageSpeed Insights no respondió esta vez." },
+};
+
+function NotEvaluated({ keys }: { keys: NotEvaluatedKey[] }) {
+  return (
+    <section>
+      <SectionTitle title={<T en="What this scan doesn't evaluate" es="Lo que este escaneo no evalúa" />} />
+      <ul className="space-y-2 rounded-2xl border border-dashed border-[#d9dce6] px-4 py-3.5">
+        {keys.map((key) => (
+          <li key={key} className="flex gap-2.5 text-xs leading-5 text-[#5b6478]">
+            <span className="mt-1.5 size-1 shrink-0 rounded-full bg-[#c9cedd]" />
+            <T en={notEvaluatedText[key].en} es={notEvaluatedText[key].es} />
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-[#8a91a3]">
+        <T
+          en="We never show invented numbers: what we can't measure stays out of the scores."
+          es="Nunca mostramos números inventados: lo que no podemos medir queda fuera de los puntajes."
+        />
+      </p>
+    </section>
   );
 }
 

@@ -9,6 +9,9 @@ import { Breadcrumb, NavLinks } from "./nav";
 import { ScanButton } from "./scan-dialog";
 import { SiteSwitcher } from "./site-switcher";
 
+// "Scan now" is a Server Action used from every dashboard page; the full audit needs up to ~2 minutes.
+export const maxDuration = 180;
+
 async function CurrentAccountMenu() {
   const user = await getCurrentUser();
   return <AccountMenu user={{ name: user.name, email: user.email, photoUrl: user.photoUrl }} />;
