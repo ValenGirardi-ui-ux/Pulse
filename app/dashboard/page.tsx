@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import type { NotEvaluatedKey, PerformanceData } from "@/lib/scan/audit";
+import type { PerformanceData } from "@/lib/scan/audit";
 import { getDashboardData, issueTitle, openIssues, timeAgo, type Bilingual } from "@/lib/scan/data";
 import { categories as auditCategories, categoryLabels, categoryScore, ruleOf } from "@/lib/scan/rules";
 import { T } from "../i18n";
 import { AskPulseButton } from "./agent";
 import { severityDot } from "./data";
 import { ScanDataSkeleton, ScanEmptyState } from "./empty-state";
+import { DownloadReport } from "./report-download";
 import { IconArrow, IconChevron, IconSpark } from "./icons";
 
 export const metadata: Metadata = {
@@ -109,6 +110,23 @@ async function Overview() {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
+      {data.site && (
+        <div className="-mb-4 flex justify-end">
+          <DownloadReport
+            report={{
+              site: data.site.url,
+              name: data.site.name,
+              createdAt: latest.createdAt,
+              score: latest.score,
+              pagesCrawled: latest.report?.pagesCrawled ?? latest.pages,
+              categories: categories.map((category) => ({ key: category.name, score: category.score })),
+              performance: latest.report?.performance ?? null,
+              issues,
+            }}
+          />
+        </div>
+      )}
+
       <section className="grid grid-cols-2 gap-y-6 lg:grid-cols-4 lg:divide-x lg:divide-[#ececf1]">
         <Stat
           label={<T en="Pulse Score" es="Puntaje Pulse" />}
@@ -188,17 +206,6 @@ async function Overview() {
             </p>
           </Link>
         ))}
-        <div className="rounded-2xl border border-dashed border-[#d9dce6] px-4 py-3.5">
-          <div className="flex items-center justify-between">
-            <span className="truncate text-[13px] font-medium text-[#5b6478]">
-              <T en={categoryLabels.Authority.en} es={categoryLabels.Authority.es} />
-            </span>
-            <span className="font-mono text-lg text-[#c9cedd]">—</span>
-          </div>
-          <p className="mt-1 text-xs text-[#8a91a3]">
-            <T en="Not evaluated · needs paid APIs" es="No evaluado · requiere APIs pagas" />
-          </p>
-        </div>
       </section>
 
       {latest.report && (
@@ -285,7 +292,6 @@ async function Overview() {
 
       {latest.report?.performance && <CoreWebVitals data={latest.report.performance} />}
 
-      {latest.report && latest.report.notEvaluated.length > 0 && <NotEvaluated keys={latest.report.notEvaluated} />}
     </main>
   );
 }
@@ -327,37 +333,6 @@ function CoreWebVitals({ data }: { data: PerformanceData }) {
         <T
           en={`Measured with Google PageSpeed Insights${data.score !== null ? ` (performance ${data.score}/100)` : ""}. INP and field values come from real Chrome users when Google has enough data.`}
           es={`Medido con Google PageSpeed Insights${data.score !== null ? ` (rendimiento ${data.score}/100)` : ""}. INP y los valores de campo vienen de usuarios reales de Chrome cuando Google tiene datos suficientes.`}
-        />
-      </p>
-    </section>
-  );
-}
-
-const notEvaluatedText: Record<NotEvaluatedKey, { en: string; es: string }> = {
-  authority: { en: "Backlinks, authority and competitors: need paid data providers (Ahrefs, Semrush…).", es: "Backlinks, autoridad y competencia: necesitan proveedores de datos pagos (Ahrefs, Semrush…)." },
-  search_console: { en: "Search Console, Analytics, Bing and Google Business Profile: need connecting your accounts.", es: "Search Console, Analytics, Bing y Google Business Profile: necesitan conectar tus cuentas." },
-  ai_visibility: { en: "Brand mentions and citations in ChatGPT, Gemini or Perplexity: need AI APIs.", es: "Menciones y citas de tu marca en ChatGPT, Gemini o Perplexity: necesitan APIs de IA." },
-  semantic: { en: "Keywords, search intent, cannibalization and writing quality: need AI-assisted analysis.", es: "Keywords, intención de búsqueda, canibalización y calidad de redacción: necesitan análisis con IA." },
-  rendering: { en: "Rendered DOM vs. initial HTML and hydration: need a real browser. Pulse checks the raw HTML.", es: "DOM renderizado vs. HTML inicial e hidratación: necesitan un navegador real. Pulse revisa el HTML inicial." },
-  lab_performance: { en: "Core Web Vitals and Lighthouse accessibility: PageSpeed Insights didn't answer this time.", es: "Core Web Vitals y accesibilidad de Lighthouse: PageSpeed Insights no respondió esta vez." },
-};
-
-function NotEvaluated({ keys }: { keys: NotEvaluatedKey[] }) {
-  return (
-    <section>
-      <SectionTitle title={<T en="What this scan doesn't evaluate" es="Lo que este escaneo no evalúa" />} />
-      <ul className="space-y-2 rounded-2xl border border-dashed border-[#d9dce6] px-4 py-3.5">
-        {keys.map((key) => (
-          <li key={key} className="flex gap-2.5 text-xs leading-5 text-[#5b6478]">
-            <span className="mt-1.5 size-1 shrink-0 rounded-full bg-[#c9cedd]" />
-            <T en={notEvaluatedText[key].en} es={notEvaluatedText[key].es} />
-          </li>
-        ))}
-      </ul>
-      <p className="mt-2 text-xs text-[#8a91a3]">
-        <T
-          en="We never show invented numbers: what we can't measure stays out of the scores."
-          es="Nunca mostramos números inventados: lo que no podemos medir queda fuera de los puntajes."
         />
       </p>
     </section>
