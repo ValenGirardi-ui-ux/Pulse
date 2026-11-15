@@ -1132,7 +1132,7 @@ async function readSitemaps(origin: string) {
 }
 
 /** Days until the site's TLS certificate expires, or null if it can't be read. */
-async function certificateDaysLeft(host: string): Promise<number | null> {
+export async function certificateDaysLeft(host: string): Promise<number | null> {
   try {
     await assertPublic(new URL(`https://${host}/`));
   } catch {

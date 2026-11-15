@@ -5,11 +5,13 @@ import { useT } from "../../i18n";
 import { Segmented } from "../controls";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "../styles";
 import {
+  allowedPorts,
   cleanUrl,
   defaultPorts,
   intervals,
   isValidHost,
   isValidUrl,
+  maxPorts,
   portNames,
   type Interval,
   type MonitorType,
@@ -32,20 +34,20 @@ const types: {
     title: "Website",
     description: "Check a URL from the outside, like a visitor would.",
     descriptionEs: "Revisa una URL desde afuera, como lo haría un visitante.",
-    checks: "Online · HTTP code · Response time · SSL · Error pages · Broken links",
-    checksEs: "En línea · Código HTTP · Tiempo de respuesta · SSL · Páginas con error · Links rotos",
+    checks: "Online · HTTP code · Response time · SSL · Availability",
+    checksEs: "En línea · Código HTTP · Tiempo de respuesta · SSL · Disponibilidad",
   },
   {
     type: "server",
     title: "Server",
     description: "Check an IP address or server domain directly.",
     descriptionEs: "Revisa directamente una dirección IP o el dominio de un servidor.",
-    checks: "Availability · Ping · Latency · Ports",
-    checksEs: "Disponibilidad · Ping · Latencia · Puertos",
+    checks: "Availability · Latency · Ports",
+    checksEs: "Disponibilidad · Latencia · Puertos",
   },
 ];
 
-const MAX_PORTS = 10;
+const MAX_PORTS = maxPorts;
 
 export function NewMonitorDialog({
   open,
@@ -107,6 +109,12 @@ export function NewMonitorDialog({
       setPortError(t("Use a number between 1 and 65535.", "Usá un número entre 1 y 65535."));
       return null;
     }
+    if (!allowedPorts.includes(value)) {
+      setPortError(
+        t(`Pulse checks common ports only: ${allowedPorts.join(", ")}.`, `Pulse revisa solo puertos comunes: ${allowedPorts.join(", ")}.`),
+      );
+      return null;
+    }
     if (ports.includes(value)) {
       setPortError(t(`Port ${value} is already in the list.`, `El puerto ${value} ya está en la lista.`));
       return null;
@@ -148,8 +156,8 @@ export function NewMonitorDialog({
       if (!isValidHost(target)) {
         setError(
           t(
-            "Enter a valid IP address or domain, like 192.168.0.10 or api.yoursite.com",
-            "Ingresá una IP o un dominio válido, como 192.168.0.10 o api.tusitio.com",
+            "Enter a valid IP address or domain, like 203.0.113.10 or api.yoursite.com",
+            "Ingresá una IP o un dominio válido, como 203.0.113.10 o api.tusitio.com",
           ),
         );
         return;
@@ -242,7 +250,7 @@ export function NewMonitorDialog({
                 setTarget(event.target.value);
                 setError(null);
               }}
-              placeholder={type === "website" ? t("yoursite.com", "tusitio.com") : t("192.168.0.10 or api.yoursite.com", "192.168.0.10 o api.tusitio.com")}
+              placeholder={type === "website" ? t("yoursite.com", "tusitio.com") : t("203.0.113.10 or api.yoursite.com", "203.0.113.10 o api.tusitio.com")}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "monitor-target-error" : undefined}
               autoComplete="off"
