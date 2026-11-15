@@ -110,23 +110,6 @@ async function Overview() {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
-      {data.site && (
-        <div className="-mb-4 flex justify-end">
-          <DownloadReport
-            report={{
-              site: data.site.url,
-              name: data.site.name,
-              createdAt: latest.createdAt,
-              score: latest.score,
-              pagesCrawled: latest.report?.pagesCrawled ?? latest.pages,
-              categories: categories.map((category) => ({ key: category.name, score: category.score })),
-              performance: latest.report?.performance ?? null,
-              issues,
-            }}
-          />
-        </div>
-      )}
-
       <section className="grid grid-cols-2 gap-y-6 lg:grid-cols-4 lg:divide-x lg:divide-[#ececf1]">
         <Stat
           label={<T en="Pulse Score" es="Puntaje Pulse" />}
@@ -208,14 +191,30 @@ async function Overview() {
         ))}
       </section>
 
-      {latest.report && (
-        <p className="-mt-6 text-xs text-[#8a91a3]">
-          <T
-            en={`Based on ${latest.report.pagesCrawled} pages crawled${latest.report.truncated ? " (crawl limit reached)" : ""}. The overall score is a weighted average of the areas.`}
-            es={`Basado en ${latest.report.pagesCrawled} páginas recorridas${latest.report.truncated ? " (se llegó al límite del recorrido)" : ""}. El puntaje general es un promedio ponderado de las áreas.`}
-          />
+      <div className="-mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <p className="text-xs text-[#8a91a3]">
+          {latest.report && (
+            <T
+              en={`Based on ${latest.report.pagesCrawled} pages crawled${latest.report.truncated ? " (crawl limit reached)" : ""}. The overall score is a weighted average of the areas.`}
+              es={`Basado en ${latest.report.pagesCrawled} páginas recorridas${latest.report.truncated ? " (se llegó al límite del recorrido)" : ""}. El puntaje general es un promedio ponderado de las áreas.`}
+            />
+          )}
         </p>
-      )}
+        {data.site && (
+          <DownloadReport
+            report={{
+              site: data.site.url,
+              name: data.site.name,
+              createdAt: latest.createdAt,
+              score: latest.score,
+              pagesCrawled: latest.report?.pagesCrawled ?? latest.pages,
+              categories: categories.map((category) => ({ key: category.name, score: category.score })),
+              performance: latest.report?.performance ?? null,
+              issues,
+            }}
+          />
+        )}
+      </div>
 
       <section className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
         <div>
