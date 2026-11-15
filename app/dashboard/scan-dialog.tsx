@@ -7,17 +7,18 @@ import { IconCheck, IconScan } from "./icons";
 import { runScan, type ScanResult } from "./scan-actions";
 import { primaryButtonClass, secondaryButtonClass } from "./styles";
 
-const STEP_MS = 900;
+// The audit crawls up to 30 pages and asks PageSpeed Insights: it takes about a minute.
+const STEP_MS = 7000;
 
 const checks: [string, string][] = [
-  ["Availability", "Disponibilidad"],
-  ["HTTPS & security", "HTTPS y seguridad"],
-  ["Mobile", "Celulares"],
-  ["SEO", "SEO"],
-  ["Broken links", "Links rotos"],
-  ["Performance", "Rendimiento"],
-  ["Social preview", "Vista previa en redes"],
-  ["Analytics", "Analítica"],
+  ["Crawling your pages", "Recorriendo tus páginas"],
+  ["Indexing & redirects", "Indexación y redirecciones"],
+  ["On-page SEO", "SEO on-page"],
+  ["GEO / AI readiness", "Preparación GEO / IA"],
+  ["Structured data", "Datos estructurados"],
+  ["Core Web Vitals", "Core Web Vitals"],
+  ["Mobile & accessibility", "Mobile y accesibilidad"],
+  ["Security", "Seguridad"],
 ];
 
 /** The "Scan now" button. `site` is the address that will be scanned; undefined while it loads. */
@@ -158,8 +159,8 @@ function ScanDialog({ site, onClose }: { site: string | null; onClose: () => voi
               {!scanning && !finished && (
                 <p className="text-[13px] leading-5 text-[#5b6478]">
                   {t(
-                    "Pulse will open your site like a visitor would and check it. It takes a few seconds.",
-                    "Pulse va a abrir tu sitio como lo haría un visitante y revisarlo. Tarda unos segundos.",
+                    "Pulse will crawl up to 30 pages of your site and run more than 80 checks. It takes about a minute.",
+                    "Pulse va a recorrer hasta 30 páginas de tu sitio y hacer más de 80 controles. Tarda alrededor de un minuto.",
                   )}
                 </p>
               )}

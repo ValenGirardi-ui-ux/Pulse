@@ -73,7 +73,7 @@ export function toMarkdown(report: Report) {
 }
 
 export function toHtml(report: Report) {
-  const severityColor = { Critical: "#ef4444", Warning: "#f59e0b", Minor: "#c9cedd" } as const;
+  const severityColor = { Critical: "#ef4444", High: "#f97316", Warning: "#f59e0b", Minor: "#c9cedd" } as const;
 
   const areaRows = report.areaScores
     .map(

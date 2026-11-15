@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDashboardData, issueTitle, openIssues, timeAgo } from "@/lib/scan/data";
-import { ruleOf } from "@/lib/scan/rules";
+import { categoryLabels, ruleOf } from "@/lib/scan/rules";
 import { T } from "../../i18n";
 import { ScanDataSkeleton, ScanEmptyState } from "../empty-state";
 import { IconCheck } from "../icons";
@@ -74,7 +74,7 @@ async function IssuesContent() {
                   <T en={item.title.en} es={item.title.es} />
                 </span>
                 <span className="hidden text-xs sm:block">
-                  <T en={item.category} />
+                  <T en={categoryLabels[item.category].en} es={categoryLabels[item.category].es} />
                 </span>
                 <span className="w-16 text-right font-mono text-[11px] text-[#9aa1b2]">
                   <T en={item.when.en} es={item.when.es} />

@@ -8,7 +8,7 @@ import { LanguageSwitch } from "../../language-switch";
 import { Section } from "../form-layout";
 import { SiteForm } from "./site-form";
 import { RemoveSite } from "./remove-site";
-import { PreferencesForm } from "./preferences-form";
+import { SettingsForm } from "./preferences-form";
 import { SwitchSiteButton } from "./switch-site-button";
 
 export const metadata: Metadata = {
@@ -40,21 +40,12 @@ export default function SettingsPage() {
           </Row>
         </Section>
 
-        <Section
-          title={<T en="Current site" es="Sitio actual" />}
-          description={<T en="The website the dashboard is showing now." es="El sitio que está mostrando el dashboard ahora." />}
-        >
-          <Suspense fallback={<SiteFormSkeleton />}>
-            <CurrentSiteForm />
-          </Suspense>
-        </Section>
-
-        <Suspense fallback={null}>
-          <YourSites />
+        <Suspense fallback={<SettingsSkeleton />}>
+          <CurrentSettings />
         </Suspense>
 
         <Suspense fallback={null}>
-          <CurrentPreferences />
+          <YourSites />
         </Suspense>
 
         <Suspense fallback={null}>
@@ -77,8 +68,8 @@ function Row({ label, hint, children }: { label: ReactNode; hint: ReactNode; chi
   );
 }
 
-async function CurrentPreferences() {
-  const user = await getCurrentUser();
+async function CurrentSettings() {
+  const [user, site] = await Promise.all([getCurrentUser(), getCurrentSite()]);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -100,7 +91,9 @@ async function CurrentPreferences() {
   }
 
   return (
-    <PreferencesForm
+    <SettingsForm
+      key={site?.id ?? "none"}
+      site={site}
       accountEmail={user.email}
       preferences={{
         autoScans: data?.auto_scans ?? true,
@@ -112,14 +105,21 @@ async function CurrentPreferences() {
   );
 }
 
-async function CurrentSiteForm() {
-  const site = await getCurrentSite();
-  return <SiteForm key={site?.id ?? "none"} site={site} />;
-}
-
 async function YourSites() {
   const [sites, current] = await Promise.all([getSites(), getCurrentSite()]);
-  if (sites.length === 0) return null;
+
+  if (sites.length === 0) {
+    return (
+      <div id="add-site" className="scroll-mt-24">
+        <Section
+          title={<T en="Your site" es="Tu sitio" />}
+          description={<T en="Add the website you want Pulse to check." es="Agregá el sitio que querés que revise Pulse." />}
+        >
+          <SiteForm site={null} adding />
+        </Section>
+      </div>
+    );
+  }
 
   return (
     <div id="add-site" className="scroll-mt-24">
@@ -155,12 +155,12 @@ async function YourSites() {
   );
 }
 
-function SiteFormSkeleton() {
+function SettingsSkeleton() {
   return (
-    <div className="space-y-5" aria-hidden="true">
-      {[0, 1].map((row) => (
-        <div key={row}>
-          <div className="mb-1.5 h-3 w-12 rounded bg-[#ececf1]" />
+    <div className="space-y-5 py-8 md:pl-[16.5rem]" aria-hidden="true">
+      {[0, 1, 2].map((row) => (
+        <div key={row} className="max-w-xl">
+          <div className="mb-1.5 h-3 w-16 rounded bg-[#ececf1]" />
           <div className="h-9 animate-pulse rounded-full bg-[#f4f5f8]" />
         </div>
       ))}

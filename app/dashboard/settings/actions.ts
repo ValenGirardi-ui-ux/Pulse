@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { normalizeSiteUrl, rememberSite } from "@/lib/sites";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,7 @@ export type SiteFormState =
   | { ok?: boolean; error?: "missing_name" | "invalid_url" | "duplicate" | "unknown"; name?: string; url?: string }
   | undefined;
 
-/** Adds a site (and switches to it), or updates one when the form includes an id. */
+/** Adds a site, switches to it and opens its Overview; or updates one when the form includes an id. */
 export async function saveSite(_state: SiteFormState, formData: FormData): Promise<SiteFormState> {
   const user = await getCurrentUser();
   const id = String(formData.get("id") ?? "");
@@ -31,8 +32,7 @@ export async function saveSite(_state: SiteFormState, formData: FormData): Promi
   const { data, error } = await supabase.from("sites").insert({ user_id: user.id, name, url }).select("id").single();
   if (error) return { error: error.code === "23505" ? "duplicate" : "unknown", name, url: urlInput };
   await rememberSite(data.id);
-  refresh();
-  return { ok: true };
+  redirect("/dashboard");
 }
 
 export async function removeSite(id: string): Promise<{ ok: boolean }> {

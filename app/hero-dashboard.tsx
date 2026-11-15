@@ -10,9 +10,9 @@ const stats = [
 ];
 
 const categories = [
-  { name: { en: "Development", es: "Desarrollo" }, score: 100, note: { en: "No issues", es: "Sin problemas" } },
-  { name: { en: "SEO", es: "SEO" }, score: 90, note: { en: "1 issue", es: "1 problema" } },
-  { name: { en: "Marketing", es: "Marketing" }, score: 94, note: { en: "2 issues", es: "2 problemas" } },
+  { name: { en: "Technical SEO", es: "SEO técnico" }, score: 100, note: { en: "No issues", es: "Sin problemas" } },
+  { name: { en: "On-page SEO", es: "SEO on-page" }, score: 90, note: { en: "1 issue", es: "1 problema" } },
+  { name: { en: "GEO readiness", es: "Preparación GEO" }, score: 94, note: { en: "2 issues", es: "2 problemas" } },
   { name: { en: "Performance", es: "Rendimiento" }, score: 100, note: { en: "No issues", es: "Sin problemas" } },
 ];
 

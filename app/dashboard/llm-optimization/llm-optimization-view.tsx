@@ -39,7 +39,7 @@ const areaInfoEs: Record<Area, string> = {
   JavaScript: "Contenido que se ve sin ejecutar scripts",
 };
 
-const groupLabel = { Critical: "Critical", Warning: "Warnings", Minor: "Minor" } as const;
+const groupLabel = { Critical: "Critical", High: "High", Warning: "Medium", Minor: "Low" } as const;
 
 function scoreTone(score: number) {
   if (score >= 85) return { dot: "bg-emerald-500", text: "text-emerald-600", label: "Good" };
@@ -297,6 +297,12 @@ function ReportView({ report, onAsk }: { report: Report; onAsk: (text: string) =
 
   return (
     <div className="space-y-10">
+      <p className="rounded-xl border border-dashed border-[#d9dce6] px-4 py-3 text-xs leading-5 text-[#5b6478]">
+        {t(
+          "This measures GEO readiness: whether AI assistants can read, understand and quote your site. It doesn't measure observed visibility (whether ChatGPT, Gemini or Perplexity actually mention you), which needs AI APIs. Following these fixes doesn't guarantee appearing in their answers.",
+          "Esto mide la preparación GEO: si los asistentes de IA pueden leer, entender y citar tu sitio. No mide la visibilidad observada (si ChatGPT, Gemini o Perplexity realmente te mencionan), que requiere APIs de IA. Aplicar estos arreglos no garantiza aparecer en sus respuestas.",
+        )}
+      </p>
       <section className={`${card} flex flex-col gap-6 p-5 md:flex-row md:items-center`}>
         <div className="flex items-center gap-5">
           <ScoreRing score={report.score} />
