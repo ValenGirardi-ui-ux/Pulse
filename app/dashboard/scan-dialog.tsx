@@ -21,7 +21,7 @@ const checks: [string, string][] = [
 ];
 
 /** The "Scan now" button. `site` is the address that will be scanned; undefined while it loads. */
-export function ScanButton({ site }: { site?: string | null }) {
+export function ScanButton({ site, variant = "header" }: { site?: string | null; variant?: "header" | "large" }) {
   const [open, setOpen] = useState(false);
   const [run, setRun] = useState(0);
   const close = useCallback(() => setOpen(false), []);
@@ -39,10 +39,18 @@ export function ScanButton({ site }: { site?: string | null }) {
         aria-label={t("Scan now", "Escanear ahora")}
         onClick={start}
         disabled={site === undefined}
-        className="inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#4c2882] text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(76,40,130,0.3),inset_0_1px_0_rgba(255,255,255,0.12)] transition-colors hover:bg-[#5a3196] disabled:opacity-60 md:w-auto md:px-4"
+        className={
+          variant === "large"
+            ? "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#4c2882] px-6 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(76,40,130,0.28)] transition-colors hover:bg-[#5a3196] disabled:opacity-60"
+            : "inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#4c2882] text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(76,40,130,0.3),inset_0_1px_0_rgba(255,255,255,0.12)] transition-colors hover:bg-[#5a3196] disabled:opacity-60 md:w-auto md:px-4"
+        }
       >
-        <IconScan className="size-3.5" />
-        <span className="hidden md:inline">{t("Scan now", "Escanear ahora")}</span>
+        <IconScan className={variant === "large" ? "size-4" : "size-3.5"} />
+        {variant === "large" ? (
+          <span>{t("Scan my site", "Escanear mi sitio")}</span>
+        ) : (
+          <span className="hidden md:inline">{t("Scan now", "Escanear ahora")}</span>
+        )}
       </button>
       {open && site !== undefined && <ScanDialog key={run} site={site} onClose={close} />}
     </>

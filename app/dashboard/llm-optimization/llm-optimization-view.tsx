@@ -47,8 +47,9 @@ function scoreTone(score: number) {
   return { dot: "bg-red-500", text: "text-red-600", label: "Poor" };
 }
 
-export function LlmOptimizationView() {
-  const [input, setInput] = useState("");
+/** `site` is the current site's address ("example.com"): the form starts filled in with it. */
+export function LlmOptimizationView({ site = null }: { site?: string | null }) {
+  const [input, setInput] = useState(site ? `https://${site}` : "");
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [step, setStep] = useState(0);
@@ -124,6 +125,15 @@ export function LlmOptimizationView() {
               "Revisá qué tan bien ChatGPT, Claude, Perplexity y otros asistentes de IA pueden leer y citar un sitio web.",
             )}
           </p>
+          <div className="mt-4 rounded-xl bg-[#4c2882]/[0.04] px-4 py-3 text-[13px] leading-5 text-[#3c4558]">
+            <p className="font-medium text-[#0f1a2e]">{t("Why does this matter?", "¿Por qué importa?")}</p>
+            <p className="mt-1">
+              {t(
+                "More and more people ask ChatGPT or other AI assistants instead of searching on Google. These assistants only recommend sites they can read and understand. This analysis tells you if they can read yours, and what to change so they recommend it.",
+                "Cada vez más gente le pregunta a ChatGPT u otros asistentes de IA en lugar de buscar en Google. Estos asistentes solo recomiendan sitios que pueden leer y entender. Este análisis te dice si pueden leer el tuyo y qué cambiar para que lo recomienden.",
+              )}
+            </p>
+          </div>
         </div>
 
         <form onSubmit={onSubmit} noValidate className={`${card} p-4`}>
@@ -149,10 +159,21 @@ export function LlmOptimizationView() {
               {running ? t("Analyzing…", "Analizando…") : report ? t("Analyze again", "Analizar de nuevo") : t("Analyze", "Analizar")}
             </button>
           </div>
-          {error && (
+          {error ? (
             <p id="ai-url-error" role="alert" className="mt-2 text-xs text-red-600">
               {error}
             </p>
+          ) : (
+            site &&
+            !report &&
+            !running && (
+              <p className="mt-2 text-xs text-[#8a91a3]">
+                {t(
+                  "We filled in your current site. Press Analyze, or write another address.",
+                  "Completamos tu sitio actual. Tocá Analizar, o escribí otra dirección.",
+                )}
+              </p>
+            )
           )}
         </form>
 

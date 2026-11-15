@@ -103,6 +103,12 @@ export function MonitorsView() {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
+      <p role="note" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-5 text-amber-800">
+        {t(
+          "Demo: this section shows example data so you can see how monitors will work. Real monitors are coming soon. Your own site is checked from Overview and Scans.",
+          "Demo: esta sección muestra datos de ejemplo para que veas cómo van a funcionar los monitores. Los monitores reales llegan pronto. Tu sitio se revisa desde Resumen y Escaneos.",
+        )}
+      </p>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{t("Monitors", "Monitores")}</h1>

@@ -42,7 +42,7 @@ export function SiteSwitcher({ sites, currentId }: { sites: SwitcherSite[]; curr
     return (
       <div className="px-3 pb-3">
         <Link
-          href="/dashboard/settings#add-site"
+          href="/dashboard"
           className="flex items-center justify-center rounded-2xl border border-dashed border-[#4c2882]/30 px-3 py-2.5 text-[13px] font-medium text-[#4c2882] transition-colors hover:bg-[#4c2882]/[0.04]"
         >
           {t("+ Add your site", "+ Agregar tu sitio")}

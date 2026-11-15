@@ -7,7 +7,7 @@ import { IconAlert, IconBot, IconGrid, IconPulse, IconScan } from "./icons";
 
 const links = [
   { href: "/dashboard", label: "Overview", es: "Resumen", icon: IconGrid },
-  { href: "/dashboard/monitors", label: "Monitors", es: "Monitores", icon: IconPulse },
+  { href: "/dashboard/monitors", label: "Monitors", es: "Monitores", icon: IconPulse, demo: true },
   { href: "/dashboard/issues", label: "Issues", es: "Problemas", icon: IconAlert },
   { href: "/dashboard/scans", label: "Scans", es: "Escaneos", icon: IconScan },
   { href: "/dashboard/llm-optimization", label: "LLM Optimization", es: "Optimización para IA", icon: IconBot },
@@ -19,7 +19,7 @@ export function NavLinks() {
 
   return (
     <nav className="flex-1 space-y-1 px-3">
-      {links.map(({ href, label, es, icon: Icon }) => {
+      {links.map(({ href, label, es, icon: Icon, ...link }) => {
         const active = pathname === href;
         return (
           <Link
@@ -34,6 +34,15 @@ export function NavLinks() {
           >
             <Icon className="size-4" />
             <span className="flex-1">{t(label, es)}</span>
+            {"demo" in link && (
+              <span
+                className={`rounded-full px-1.5 text-[10px] font-medium ${
+                  active ? "bg-white/20 text-white" : "bg-black/[0.05] text-[#8a91a3]"
+                }`}
+              >
+                Demo
+              </span>
+            )}
           </Link>
         );
       })}

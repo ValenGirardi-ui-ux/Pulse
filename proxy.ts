@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "./lib/supabase/env";
 
 // Refreshes the Supabase session on every request and keeps signed-out users out of the dashboard.
-// Signed-in users can still open /login and /signup, so they can switch to another account.
+// Signed-in users who open /login or /signup go to the dashboard; to use another account they log out first.
 export async function proxy(request: NextRequest) {
   // If Supabase falls back to the Site URL after Google sign-in or email confirmation,
   // the auth code lands on the home page. Finish signing in and go to the dashboard.
@@ -43,6 +43,14 @@ export async function proxy(request: NextRequest) {
 
   if (!signedIn && pathname.startsWith("/dashboard")) {
     return redirectKeepingCookies(request, response, "/login");
+  }
+
+  if (signedIn && (pathname === "/login" || pathname === "/signup")) {
+    // getClaims only checks the token signature. Confirm the account still exists before sending them to the
+    // dashboard: a deleted or revoked session would otherwise bounce between /login and /dashboard forever.
+    const { data: current } = await supabase.auth.getUser();
+    if (current.user) return redirectKeepingCookies(request, response, "/dashboard");
+    await supabase.auth.signOut({ scope: "local" });
   }
 
   return response;
