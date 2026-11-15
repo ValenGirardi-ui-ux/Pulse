@@ -66,6 +66,46 @@ export type Database = {
         Update: Record<string, never>;
         Relationships: [];
       };
+      monitors: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          target: string;
+          interval_minutes: number;
+          ports: number[];
+          last_checked_at: string | null;
+          last_status: string | null;
+          last_result: unknown;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          type: string;
+          target: string;
+          interval_minutes?: number;
+          ports?: number[];
+          last_checked_at?: string | null;
+          last_status?: string | null;
+          last_result?: unknown;
+          created_at?: string;
+        };
+        Update: {
+          interval_minutes?: number;
+          ports?: number[];
+          last_checked_at?: string | null;
+          last_status?: string | null;
+          last_result?: unknown;
+        };
+        Relationships: [];
+      };
+      monitor_checks: {
+        Row: { id: number; monitor_id: string; user_id: string; checked_at: string; ok: boolean; status: string; response_ms: number | null };
+        Insert: { monitor_id: string; user_id: string; checked_at?: string; ok: boolean; status: string; response_ms?: number | null };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       contact_messages: {
         Row: { id: string; name: string; email: string; message: string; created_at: string };
         Insert: { id?: string; name: string; email: string; message: string; created_at?: string };
@@ -76,6 +116,7 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       delete_my_account: { Args: Record<string, never>; Returns: undefined };
+      monitor_stats: { Args: Record<string, never>; Returns: { monitor_id: string; total: number; ok_count: number }[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
