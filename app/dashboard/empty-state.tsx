@@ -33,10 +33,7 @@ function Squiggle({ children }: { children: ReactNode }) {
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <p className="flex items-center gap-3 font-mono text-[11px] tracking-[0.2em] text-[#5b6478] uppercase">
-      <span className="h-px w-7 bg-[#4c2882]/50" />
-      {children}
-    </p>
+    <p className="text-[13px] font-medium text-[#4c2882]">{children}</p>
   );
 }
 
@@ -45,10 +42,10 @@ type StepState = "done" | "current" | "next";
 function Step({ n, state, title, children }: { n: string; state: StepState; title: ReactNode; children?: ReactNode }) {
   return (
     <li className="grid gap-x-6 gap-y-3 border-t border-[#ececf1] py-6 sm:grid-cols-[7rem_minmax(0,1fr)]">
-      <p className="font-mono text-[11px] tracking-[0.16em] text-[#8a91a3] uppercase">
-        <T en="Step" es="Paso" /> / {n}
+      <p className="text-[13px] text-[#8a91a3]">
+        <T en="Step" es="Paso" /> {Number(n)}
         {state === "done" && (
-          <span className="mt-1 block text-emerald-600 normal-case tracking-normal">
+          <span className="mt-0.5 block text-emerald-600">
             <T en="done" es="listo" />
           </span>
         )}
@@ -72,7 +69,7 @@ const sampleIssues = [
 function SampleResult() {
   return (
     <div aria-hidden="true" className="border-l border-[#ececf1] lg:pl-8">
-      <p className="font-mono text-[11px] tracking-[0.16em] text-[#8a91a3] uppercase">
+      <p className="text-[13px] text-[#8a91a3]">
         <T en="A result looks like this" es="Un resultado se ve así" />
       </p>
       <p className="mt-5 text-6xl leading-none font-light tracking-[-0.04em] text-[#0f1a2e]">
