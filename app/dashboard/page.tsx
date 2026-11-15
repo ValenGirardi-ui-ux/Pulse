@@ -160,6 +160,13 @@ async function Overview() {
         />
       </section>
 
+      <p className="-mt-4 rounded-xl bg-[#4c2882]/[0.04] px-4 py-3 text-[13px] leading-5 text-[#3c4558]">
+        <T
+          en="Your Pulse Score goes from 0 to 100. Each issue lowers it: fix the ones below, starting with the most important, and run a new scan to see it go up."
+          es="Tu Puntaje Pulse va de 0 a 100. Cada problema lo baja: arreglá los de abajo, empezando por los más importantes, y hacé un nuevo escaneo para verlo subir."
+        />
+      </p>
+
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {categories.map((category) => (
           <Link
